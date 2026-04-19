@@ -67,7 +67,7 @@ const ProductCardAddButton: FC<ProductCardAddButtonProps> = ({
       debounce(async (quantity: number) => {
         if (!isLoggedIn) {
           // Handle offline cart
-          const offlineItemId = `${defaultVariant.id}`;
+          const offlineItemId = `${product.id}`;
 
           if (quantity === 0) {
             // Remove from offline cart
@@ -94,8 +94,9 @@ const ProductCardAddButton: FC<ProductCardAddButtonProps> = ({
             // Add new item to offline cart using helper function
             handleOfflineAddToCart({
               product: product,
-              variant: defaultVariant,
               quantity: quantity,
+              addons: [],
+              onClose: () => {},
               renderToast: true,
             });
           }
@@ -118,8 +119,8 @@ const ProductCardAddButton: FC<ProductCardAddButtonProps> = ({
           } else {
             // Add new item to cart
             response = await addToCart({
-              product_variant_id: defaultVariant.id,
-              store_id: defaultVariant.store_id,
+              product_variant_id: product.id,
+              store_id: product.store_id,
               quantity: quantity,
             });
           }

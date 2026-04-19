@@ -58,7 +58,7 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
     direction: "inc" | "dec",
     minQuantity?: number,
     maxQuantity?: number,
-    stock?: number
+    stock?: number,
   ) => {
     const delta = direction === "inc" ? step : -step;
     const newQuantity = currentQuantity + delta;
@@ -115,7 +115,7 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
       updateOfflineCartItemQuantity({
         id,
         quantity: newQuantity,
-      })
+      }),
     );
   };
   const handleRemoveItem = () => {
@@ -191,6 +191,11 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
                             onPress={() => setSelectedItemId(item.id)}
                           />
                         </div>
+                        <h3 className="font-medium text-sm">
+                          <span className="text-xs text-foreground/60">
+                            {item.addons?.map((addon) => addon.name).join(", ")}
+                          </span>
+                        </h3>
                         {item.storeName && (
                           <Link
                             href={`/stores/${item.storeSlug}`}
@@ -230,7 +235,7 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
                                     "dec",
                                     item.minQuantity,
                                     item.maxQuantity,
-                                    item.stock
+                                    item.stock,
                                   )
                                 }
                               >
@@ -251,7 +256,7 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
                                     "inc",
                                     item.minQuantity,
                                     item.maxQuantity,
-                                    item.stock
+                                    item.stock,
                                   )
                                 }
                               >
