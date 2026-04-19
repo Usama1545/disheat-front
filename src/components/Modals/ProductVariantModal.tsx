@@ -59,28 +59,21 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
 
   // Initialize quantities for each variant
   useEffect(() => {
-    if (product.variants && product.variants.length > 0) {
-      const initialQuantities: Record<number, number> = {};
-      product.variants.forEach((variant) => {
-        initialQuantities[variant.id] = product.minimum_order_quantity || 1;
-      });
-      // setVariantQuantities(initialQuantities);
+    if (!isOpen) {
+      setLightboxOpen(false);
     }
-    setLightboxOpen(false);
 
-    // Track recently viewed when modal opens
     if (isOpen && product) {
       dispatch(addRecentlyViewed(product));
 
-      // Track product view analytics
       trackProductView(
         product.id.toString(),
         product.title,
         product.category_name,
-        product.variants?.[0]?.price,
+        product.price, // also fix this (no variants)
       );
     }
-  }, [product, isOpen, dispatch]);
+  }, [isOpen, product, dispatch]);
 
   const lowStockLimitRaw = Number(systemSettings?.lowStockLimit);
   const lowStockLimit =
