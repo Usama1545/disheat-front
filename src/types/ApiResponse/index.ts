@@ -1053,6 +1053,7 @@ export interface CartItem {
   product: {
     id: number;
     name: string | null;
+    title: string;
     slug: string;
     image: string;
     price: number;
