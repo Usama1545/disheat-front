@@ -1052,6 +1052,8 @@ export interface CartItem {
     name: string | null;
     slug: string;
     image: string;
+    price: number;
+    compare_at_price: number;
     minimum_order_quantity: number;
     quantity_step_size: number;
     total_allowed_quantity: number;
