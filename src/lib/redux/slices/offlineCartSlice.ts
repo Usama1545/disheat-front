@@ -2,7 +2,7 @@ import { SelectedAddon } from "@/types/ApiResponse";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export type OfflineCartItem = {
-  id: string;
+  id: number;
   name: string;
   image?: string;
   slug?: string;

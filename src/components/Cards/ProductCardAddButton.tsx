@@ -44,15 +44,11 @@ const ProductCardAddButton: FC<ProductCardAddButtonProps> = ({
   // Find if this variant is already in cart (online or offline)
   const cartItem = useMemo(() => {
     if (isLoggedIn) {
-      return cartData?.items?.find(
-        (item) => item.product_variant_id === defaultVariant.id,
-      );
+      return cartData?.items?.find((item) => item.product_id === product.id);
     } else {
-      return offlineCartItems?.find(
-        (item) => item.product_variant_id === defaultVariant.id,
-      );
+      return offlineCartItems?.find((item) => item.id === product.id);
     }
-  }, [cartData, offlineCartItems, defaultVariant.id, isLoggedIn]);
+  }, [cartData, offlineCartItems, product.id, isLoggedIn]);
 
   const [localQuantity, setLocalQuantity] = useState(0);
   const [isUpdating, setIsUpdating] = useState(false);
