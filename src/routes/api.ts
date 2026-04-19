@@ -874,7 +874,7 @@ export const getSectionBySlug = async (
 
 // Cart Management
 export const addToCart = async (params: {
-  product_variant_id: string | number;
+  product_id: string | number;
   store_id: string | number;
   quantity: string | number;
 }): Promise<ApiResponse<CartResponse>> => {

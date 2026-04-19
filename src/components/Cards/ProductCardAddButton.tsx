@@ -119,7 +119,7 @@ const ProductCardAddButton: FC<ProductCardAddButtonProps> = ({
           } else {
             // Add new item to cart
             response = await addToCart({
-              product_variant_id: product.id,
+              product_id: product.id,
               store_id: product.store_id,
               quantity: quantity,
             });
