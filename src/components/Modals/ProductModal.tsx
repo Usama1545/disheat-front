@@ -174,8 +174,10 @@ const ProductModal: FC<ProductModalProps> = ({
         }
       }
 
-      if (group.type === "multiple" && selected && group.min_select > 0) {
-        if (selected.length < group.min_select) {
+      const minSelect = group.min_select ?? 0;
+
+      if (group.type === "multiple" && selected && minSelect > 0) {
+        if (selected.length < minSelect) {
           addToast({
             title: t("addon.min_selection_title"),
             description: t("addon.min_selection_description", {
