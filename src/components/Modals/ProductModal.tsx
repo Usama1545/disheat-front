@@ -133,7 +133,7 @@ const ProductModal: FC<ProductModalProps> = ({
   const calculateSubtotal = () => {
     if (!product) return 0;
 
-    let total = parseFloat(product.price || "0");
+    let total = product.price ?? 0;
 
     Object.values(selectedAddons).forEach((val) => {
       if (Array.isArray(val)) {
@@ -218,7 +218,7 @@ const ProductModal: FC<ProductModalProps> = ({
           if (Array.isArray(value)) {
             return value.map((option) => ({
               addon_group_id: groupId,
-              addon_option_id: option.id,
+              id: option.id,
               price: option.price,
               name: option.name,
             }));
@@ -226,7 +226,7 @@ const ProductModal: FC<ProductModalProps> = ({
             return [
               {
                 addon_group_id: groupId,
-                addon_option_id: value.id,
+                id: value.id,
                 price: value.price,
                 name: value.name,
               },
@@ -375,16 +375,15 @@ const ProductModal: FC<ProductModalProps> = ({
                       {subtotal.toFixed(2)}
                     </div>
                     {product.compare_at_price &&
-                      parseFloat(product.compare_at_price) >
-                        parseFloat(product.price) && (
+                      product.compare_at_price > product.price && (
                         <div className="flex items-center gap-2">
                           <span className="text-sm text-foreground/50 line-through">
                             {currencySymbol}
-                            {parseFloat(product.compare_at_price).toFixed(2)}
+                            {Number(product.compare_at_price).toFixed(2)}
                           </span>
                           <span className="text-xs text-green-600 font-medium">
                             {t("product_modal.save", {
-                              amount: `${currencySymbol} ${(parseFloat(product.compare_at_price) - parseFloat(product.price)).toFixed(2)}`,
+                              amount: `${currencySymbol} ${(Number(product.compare_at_price) - Number(product.price)).toFixed(2)}`,
                             })}
                           </span>
                         </div>
