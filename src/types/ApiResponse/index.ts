@@ -689,6 +689,7 @@ export interface OrderItem {
 export interface OrderProduct {
   id: number;
   name: string | null;
+  title: string;
   slug: string;
   image: string;
   requires_otp: number;
