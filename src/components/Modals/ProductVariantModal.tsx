@@ -77,7 +77,7 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
         product.id.toString(),
         product.title,
         product.category_name,
-        product.variants?.[0]?.price
+        product.variants?.[0]?.price,
       );
     }
   }, [product, isOpen, dispatch]);
@@ -102,7 +102,7 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
     const newQuantity = currentQuantity + change;
     const maxQuantity = Math.min(
       product.total_allowed_quantity || 9999,
-      variant.stock
+      variant.stock,
     );
 
     if (newQuantity > variant.stock) {
@@ -157,28 +157,7 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
     setLoadingVariantId(variant.id);
     const quantity = variantQuantities[variant.id] || minQuantity;
 
-    try {
-      if (isLoggedIn) {
-        await handleAddToCart({
-          product_variant_id: variant.id,
-          store_id: variant.store_id,
-          quantity: quantity,
-          onClose: onClose,
-          renderToast: true,
-        });
-      } else {
-        handleOfflineAddToCart({
-          product,
-          variant,
-          quantity,
-          onClose,
-        });
-      }
-    } catch (error) {
-      console.error("Add to cart failed:", error);
-    } finally {
-      setLoadingVariantId(null);
-    }
+    setLoadingVariantId(null);
   };
 
   const getVariantPrice = (variant: ProductVariant) => {
