@@ -1046,6 +1046,9 @@ export interface CartItem {
   product_variant_id: number;
   store_id: number;
   quantity: number;
+  base_price: number;
+  addons_total?: number;
+  grand_total?: number;
   save_for_later: boolean;
   product: {
     id: number;
