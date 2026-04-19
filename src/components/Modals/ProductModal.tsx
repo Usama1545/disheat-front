@@ -19,7 +19,7 @@ import {
   handleAddToCart,
   handleOfflineAddToCart,
 } from "@/helpers/functionalHelpers";
-import { Product } from "@/types/ApiResponse";
+import { Product, AddonGroup, AddonOption } from "@/types/ApiResponse";
 
 interface ProductModalProps {
   isOpen: boolean;
@@ -33,22 +33,6 @@ const fetcher = async (url: string) => {
   const json = await res.json();
   return json.data;
 };
-
-interface AddonOption {
-  id: string | number;
-  name: string;
-  price: string | number;
-}
-
-interface AddonGroup {
-  id: string | number;
-  name: string;
-  type: "single" | "multiple";
-  is_required?: boolean;
-  min_select: number;
-  max_select: number | null;
-  options: AddonOption[];
-}
 
 const ProductModal: FC<ProductModalProps> = ({
   isOpen,
@@ -440,10 +424,10 @@ const ProductModal: FC<ProductModalProps> = ({
                         )}
                       </div>
 
-                      {group.min_select > 0 && (
+                      {(group.min_select ?? 0) > 0 && (
                         <p className="text-xs text-foreground/50">
                           {t("addon.select_range", {
-                            min: group.min_select,
+                            min: group.min_select || 1,
                             max: group.max_select || t("addon.unlimited"),
                           })}
                         </p>
