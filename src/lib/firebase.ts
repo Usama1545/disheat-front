@@ -23,6 +23,7 @@ export interface FirebaseInstance {
   googleProvider: GoogleAuthProvider;
   appleProvider: OAuthProvider;
   analytics?: Analytics | null;
+  recaptchaVerifier?: RecaptchaVerifier | null;
 }
 
 let firebaseApp: FirebaseApp | null = null;
