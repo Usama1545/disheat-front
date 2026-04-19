@@ -11,7 +11,6 @@ import {
   addToast,
 } from "@heroui/react";
 import { ShoppingCart, X, Minus, Plus } from "lucide-react";
-import useSWR from "swr";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
@@ -25,7 +24,7 @@ import { Product } from "@/types/ApiResponse";
 interface ProductModalProps {
   isOpen: boolean;
   onClose: () => void;
-  product: ProductWithAddons;
+  product: Product;
   initialProduct?: Product;
 }
 
@@ -45,14 +44,10 @@ interface AddonGroup {
   id: string | number;
   name: string;
   type: "single" | "multiple";
-  is_required: boolean;
+  is_required?: boolean;
   min_select: number;
   max_select: number | null;
   options: AddonOption[];
-}
-
-interface ProductWithAddons extends Product {
-  addons?: AddonGroup[];
 }
 
 const ProductModal: FC<ProductModalProps> = ({
