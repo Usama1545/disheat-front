@@ -19,7 +19,7 @@ export const updateCartData = async (
   renderToast: boolean = true,
   customAddress: string | number = 0,
   customRushMode: boolean = true,
-  emtyCartToast: boolean = true
+  emtyCartToast: boolean = true,
 ): Promise<ApiResponse<CartResponse> | undefined> => {
   try {
     const isLoggedIn = store.getState().auth.isLoggedIn;
@@ -116,7 +116,7 @@ export const syncOfflineCartToServer = async (): Promise<boolean> => {
     // Transform offline cart items to API format
     const items = offlineCartItems.map((item) => ({
       store_id: item.store_id,
-      product_variant_id: item.product_variant_id,
+      product_variant_id: Number(item.id),
       quantity: item.quantity,
     }));
 
