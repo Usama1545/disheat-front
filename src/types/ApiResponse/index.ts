@@ -410,6 +410,23 @@ export interface Product {
   store_slug: string;
   variants: ProductVariant[];
   attributes: ProductAttribute[];
+  addons?: AddonGroup[];
+}
+
+export interface AddonGroup {
+  id: number;
+  name: string;
+  type: "single" | "multiple";
+  min_select?: number;
+  max_select?: number;
+  is_required?: boolean;
+  options: AddonOption[];
+}
+
+export interface AddonOption {
+  id: number;
+  name: string;
+  price: number;
 }
 
 export interface SelectedAddon {

@@ -1,22 +1,31 @@
 import useSWR from "swr";
 import { useState } from "react";
-
-const fetcher = async (url) => {
+import { Product, AddonGroup, AddonOption } from "@/types/ApiResponse";
+const fetcher = async (url: string) => {
   const res = await fetch(url);
   const json = await res.json();
   return json.data;
 };
 
-export default function ProductModal({ productSlug, onClose }) {
-  const [selectedAddons, setSelectedAddons] = useState({});
+type ProductModalProps = {
+  productSlug: string | null;
+  onClose: () => void;
+};
 
-  const { data: product, isLoading } = useSWR(
+export default function ProductModal({
+  productSlug,
+  onClose,
+}: ProductModalProps) {
+  type SelectedAddons = Record<number, AddonOption | AddonOption[]>;
+
+  const [selectedAddons, setSelectedAddons] = useState<SelectedAddons>({});
+  const { data: product, isLoading } = useSWR<Product>(
     productSlug ? `/products/${productSlug}` : null,
     fetcher,
   );
 
-  const handleSelectAddon = (group, option) => {
-    setSelectedAddons((prev) => {
+  const handleSelectAddon = (group: AddonGroup, option: AddonOption) => {
+    setSelectedAddons((prev: SelectedAddons) => {
       const groupId = group.id;
 
       if (group.type === "single") {
@@ -26,8 +35,7 @@ export default function ProductModal({ productSlug, onClose }) {
         };
       }
 
-      const existing = prev[groupId] || [];
-
+      const existing = Array.isArray(prev[groupId]) ? prev[groupId] : [];
       const exists = existing.find((o) => o.id === option.id);
 
       if (exists) {
@@ -50,13 +58,13 @@ export default function ProductModal({ productSlug, onClose }) {
   };
 
   const calculateTotal = () => {
-    let total = parseFloat(product?.price || 0);
+    let total = product?.price ?? 0;
 
     Object.values(selectedAddons).forEach((val) => {
       if (Array.isArray(val)) {
-        val.forEach((o) => (total += parseFloat(o.price)));
+        val.forEach((o) => (total += o.price));
       } else if (val) {
-        total += parseFloat(val.price);
+        total += val.price;
       }
     });
 
@@ -84,6 +92,7 @@ export default function ProductModal({ productSlug, onClose }) {
         <div className="p-4 max-h-[70vh] overflow-y-auto">
           <img
             src={product.main_image}
+            alt={product.title}
             className="w-full h-48 object-cover rounded"
           />
 
@@ -108,8 +117,9 @@ export default function ProductModal({ productSlug, onClose }) {
 
                 const isSelected =
                   group.type === "single"
-                    ? selected?.id === option.id
-                    : selected?.some((o) => o.id === option.id);
+                    ? (selected as AddonOption | undefined)?.id === option.id
+                    : Array.isArray(selected) &&
+                      selected.some((o) => o.id === option.id);
 
                 return (
                   <div

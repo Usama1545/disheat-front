@@ -62,8 +62,6 @@ const HomeTopSlider: FC<HomeTopSliderProps> = ({
     revalidateOnMount: !isSSR(),
   });
 
-  console.log("bannerImages", bannerImages);
-
   if (isLoading || !bannerImages || isValidating) {
     return (
       <div className="w-full my-4">
@@ -76,7 +74,6 @@ const HomeTopSlider: FC<HomeTopSliderProps> = ({
   }
 
   const shouldHide = bannerImages?.top?.length === 0;
-  console.log("shouldHide", shouldHide);
 
   return (
     <section id="home-slider" className="w-full">

@@ -133,17 +133,19 @@ const ProductModal: FC<ProductModalProps> = ({
   const calculateSubtotal = () => {
     if (!product) return 0;
 
-    let total = product.price ?? 0;
+    let total = Number(product.price ?? 0);
 
     Object.values(selectedAddons).forEach((val) => {
       if (Array.isArray(val)) {
-        val.forEach((o: AddonOption) => (total += parseFloat(String(o.price))));
+        val.forEach((o) => {
+          total += Number(o.price);
+        });
       } else if (val) {
-        total += parseFloat(String(val.price));
+        total += Number(val.price);
       }
     });
 
-    return total;
+    return Number(total.toFixed(2));
   };
 
   const calculateTotal = () => {
