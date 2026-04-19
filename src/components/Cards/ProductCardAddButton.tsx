@@ -46,7 +46,7 @@ const ProductCardAddButton: FC<ProductCardAddButtonProps> = ({
     if (isLoggedIn) {
       return cartData?.items?.find((item) => item.product_id === product.id);
     } else {
-      return offlineCartItems?.find((item) => item.id === product.id);
+      return offlineCartItems?.find((item) => Number(item.id) === product.id);
     }
   }, [cartData, offlineCartItems, product.id, isLoggedIn]);
 
