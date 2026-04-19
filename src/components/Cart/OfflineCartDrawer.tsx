@@ -188,7 +188,7 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
                             variant="light"
                             className="text-xs"
                             startContent={<Trash2 size={14} />}
-                            onPress={() => setSelectedItemId(item.id)}
+                            onPress={() => setSelectedItemId(Number(item.id))}
                           />
                         </div>
                         <h3 className="font-medium text-sm">
@@ -210,11 +210,6 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
                               <span>
                                 {t("product_modal.qty") + ":"} {item.quantity}
                               </span>
-                              <span>
-                                {t("product_modal.stock", {
-                                  stock: item.stock,
-                                })}
-                              </span>
                             </div>
                             <span>
                               {currencySymbol} {formatAmount(item.price)} /{" "}
@@ -235,7 +230,7 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
                                     "dec",
                                     item.minQuantity,
                                     item.maxQuantity,
-                                    item.stock,
+                                    99999,
                                   )
                                 }
                               >
@@ -256,7 +251,7 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
                                     "inc",
                                     item.minQuantity,
                                     item.maxQuantity,
-                                    item.stock,
+                                    999999,
                                   )
                                 }
                               >
