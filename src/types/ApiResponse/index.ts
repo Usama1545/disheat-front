@@ -378,6 +378,9 @@ export interface Product {
   featured: "1" | "0" | null;
   metadata: string | null;
   item_count_in_cart?: string;
+  price: number;
+  compare_at_price: number | null;
+  stock: number | null;
   seller_ratings?: {
     total_reviews: number | null;
     average_rating: number | null;

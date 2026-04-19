@@ -75,7 +75,7 @@ const ProductCard: FC<ProductCardProps> = ({
     ? variants.find((v) => v.is_default) || variants[0]
     : {
         price: product.price,
-        special_price: product.special_price,
+        special_price: product,
         stock: product.stock ?? 999, // assume available if not tracked
       };
   const variantCombinations = (() => {
