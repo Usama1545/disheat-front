@@ -122,7 +122,7 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
     if (!selectedItemId) return;
 
     try {
-      dispatch(removeOfflineCartItem(selectedItemId));
+      dispatch(removeOfflineCartItem(String(selectedItemId)));
       setSelectedItemId(null);
 
       addToast({
