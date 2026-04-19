@@ -33,7 +33,7 @@ type OfflineCartDrawerProps = {
 const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
   const { t } = useTranslation();
   const { currencySymbol } = useSettings();
-  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
 
   const dispatch = useDispatch();
   const offlineCart = useSelector((state: RootState) => state.offlineCart);
