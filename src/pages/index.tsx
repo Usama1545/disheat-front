@@ -14,7 +14,6 @@ import {
   Settings,
   Store,
 } from "@/types/ApiResponse";
-import HomeBrands from "@/views/homePage/HomeBrands";
 import HomeStores from "@/views/homePage/HomeStores";
 import { NextPageWithLayout } from "@/types";
 import { getUserLocationFromContext } from "@/helpers/functionalHelpers";
@@ -36,7 +35,7 @@ import dynamic from "next/dynamic";
 
 const HomeRecentlyViewed = dynamic(
   () => import("@/views/homePage/HomeRecentlyViewed"),
-  { ssr: false }
+  { ssr: false },
 );
 
 type HomePageProps = {
@@ -70,7 +69,7 @@ const HomePage: NextPageWithLayout<HomePageProps> = ({
   const organizationSchema = generateOrganizationSchema(
     siteName,
     siteDescription,
-    siteLogo
+    siteLogo,
   );
 
   const websiteSchema = generateWebsiteSchema(siteName);
@@ -89,12 +88,10 @@ const HomePage: NextPageWithLayout<HomePageProps> = ({
         jsonLd={[organizationSchema, websiteSchema]}
       />
 
-      <div className="flex flex-col gap-0">
-        <HomeTopSlider initialBanners={initialBanners} />
+      <div className="flex flex-col gap-0 mt-6">
+        {/* <HomeTopSlider initialBanners={initialBanners} /> */}
 
-        <HomeBrands initialBrands={initialBrands} />
-
-        <HomeCategories initialCategories={initialCategories} />
+        {/* <HomeCategories initialCategories={initialCategories} /> */}
 
         <HomeStores initialStores={initialStores} />
 

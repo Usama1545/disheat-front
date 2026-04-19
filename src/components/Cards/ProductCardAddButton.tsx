@@ -33,7 +33,7 @@ const ProductCardAddButton: FC<ProductCardAddButtonProps> = ({
   const dispatch = useDispatch();
   const cartData = useSelector((state: RootState) => state.cart.cartData);
   const offlineCartItems = useSelector(
-    (state: RootState) => state.offlineCart.items
+    (state: RootState) => state.offlineCart.items,
   );
   const isLoggedIn = useSelector((state: RootState) => state.auth.isLoggedIn);
 
@@ -41,11 +41,11 @@ const ProductCardAddButton: FC<ProductCardAddButtonProps> = ({
   const cartItem = useMemo(() => {
     if (isLoggedIn) {
       return cartData?.items?.find(
-        (item) => item.product_variant_id === defaultVariant.id
+        (item) => item.product_variant_id === defaultVariant.id,
       );
     } else {
       return offlineCartItems?.find(
-        (item) => item.product_variant_id === defaultVariant.id
+        (item) => item.product_variant_id === defaultVariant.id,
       );
     }
   }, [cartData, offlineCartItems, defaultVariant.id, isLoggedIn]);
@@ -59,8 +59,7 @@ const ProductCardAddButton: FC<ProductCardAddButtonProps> = ({
   }, [cartItem]);
 
   // Check if product is simple (single variant) or variant (multiple variants)
-  const isSimpleProduct =
-    product.type === "simple" || product.variants.length === 1;
+  const isSimpleProduct = product.type === "simple";
 
   // Debounced add to cart function
   const debouncedAddToCart = useMemo(
@@ -84,7 +83,7 @@ const ProductCardAddButton: FC<ProductCardAddButtonProps> = ({
               updateOfflineCartItemQuantity({
                 id: offlineItemId,
                 quantity: quantity,
-              })
+              }),
             );
             addToast({
               title: t("cart_updated_title"),
@@ -152,7 +151,7 @@ const ProductCardAddButton: FC<ProductCardAddButtonProps> = ({
           setIsUpdating(false);
         }
       }, 500),
-    [defaultVariant, isLoggedIn, cartItem, product, dispatch, t]
+    [defaultVariant, isLoggedIn, cartItem, product, dispatch, t],
   );
 
   const handleQuantityChange = useCallback(
@@ -199,7 +198,7 @@ const ProductCardAddButton: FC<ProductCardAddButtonProps> = ({
       setLocalQuantity(newQuantity);
       debouncedAddToCart(newQuantity);
     },
-    [product, defaultVariant, debouncedAddToCart, t]
+    [product, defaultVariant, debouncedAddToCart, t],
   );
 
   const handleIncrement = useCallback(() => {
@@ -213,14 +212,8 @@ const ProductCardAddButton: FC<ProductCardAddButtonProps> = ({
   }, [localQuantity, product.quantity_step_size, handleQuantityChange]);
 
   const handleInitialAdd = () => {
-    if (isSimpleProduct) {
-      // For simple products, directly add to cart
-      const minQuantity = product.minimum_order_quantity || 1;
-      handleQuantityChange(minQuantity);
-    } else {
-      // For variant products, open modal
-      onOpenModal();
-    }
+    // For variant products, open modal
+    onOpenModal();
   };
 
   // Cleanup debounce on unmount

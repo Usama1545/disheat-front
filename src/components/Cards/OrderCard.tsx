@@ -39,7 +39,7 @@ import dynamic from "next/dynamic";
 
 const TrackOrderModal = dynamic(
   () => import("@/components/Modals/TrackOrderModal"),
-  { ssr: false }
+  { ssr: false },
 );
 
 interface OrderCardProps {
@@ -225,15 +225,6 @@ const OrderCard: FC<OrderCardProps> = ({ order }) => {
                             >
                               {item?.product?.name || t("na")}
                             </Link>
-
-                            {item?.variant?.title && (
-                              <div
-                                title={item.variant.title || ""}
-                                className="block truncate overflow-hidden text-ellipsis max-w-full text-xxs  text-foreground/50"
-                              >
-                                {item.variant.title}
-                              </div>
-                            )}
                           </h3>
                           <p className="text-xs text-foreground/50 -mt-1">
                             {currencySymbol}
@@ -329,7 +320,7 @@ const OrderCard: FC<OrderCardProps> = ({ order }) => {
 
           {buttonConfig.returnOrder &&
             order.items.some(
-              (item) => item.product?.is_returnable && item.return_eligible
+              (item) => item.product?.is_returnable && item.return_eligible,
             ) && (
               <Button
                 size="sm"

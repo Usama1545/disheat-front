@@ -24,14 +24,20 @@ import {
   Info,
   X,
 } from "lucide-react";
+import { BannerData } from "@/types/ApiResponse";
 import dynamic from "next/dynamic";
 import { useSelector } from "react-redux";
 import { RootState } from "@/lib/redux/store";
+import HomeTopSlider from "@/views/homePage/HomeTopSlider";
 import { useRouter } from "next/router";
 import { useSettings } from "@/contexts/SettingsContext";
 import CategoryTabs from "./Functional/CategoryTabs";
 import LanguageSwitcher from "./Functional/LanguageSwitcher";
 import { useTranslation } from "react-i18next";
+
+type NavBarProps = {
+  initialBanners?: BannerData;
+};
 const FallbackCartIcon = () => (
   <Link href="/cart">
     <ShoppingCart className="text-default-500 cursor-pointer" />
@@ -131,7 +137,6 @@ export const Navbar: FC = () => {
             </Button>
           </div>
         )}
-
         <HeroUINavbar
           maxWidth="2xl"
           position="sticky"
@@ -271,23 +276,13 @@ export const Navbar: FC = () => {
             </div>
           </NavbarMenu>
         </HeroUINavbar>
-
         {/* Mobile Search & Location */}
         <div className="w-full md:hidden px-2 flex flex-col sm:flex-row sm:justify-start sm:gap-4 relative -top-[1vh] sm:top-0">
           <LocationSelector />
           <GlobalSearchbar />
         </div>
 
-        {/* CategoryTabs */}
-        {router.pathname === "/" && (
-          <div
-            className={`w-full max-w-screen-2xl mx-auto px-2 md:px-6 ${
-              router.pathname !== "/" ? "hidden" : ""
-            }`}
-          >
-            <CategoryTabs className="w-full" />
-          </div>
-        )}
+        {router.pathname === "/" && <HomeTopSlider />}
       </div>
       <OfflineCartDrawer
         isOpen={isOfflineCartOpen}

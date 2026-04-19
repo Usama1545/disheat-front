@@ -46,7 +46,7 @@ type HomePageParams = {
  * @returns Promise<HomePageData> - Object containing all homepage data
  */
 export const getHomePageData = async (
-  params: HomePageParams = {}
+  params: HomePageParams = {},
 ): Promise<HomePageData> => {
   const { lat = "", lng = "", access_token = "", homeCategory = "" } = params;
 
@@ -69,7 +69,7 @@ export const getHomePageData = async (
       settings = settingsResponse.data;
     } else {
       console.error(
-        settingsResponse.message || "Invalid settings response data"
+        settingsResponse.message || "Invalid settings response data",
       );
     }
   } catch (error) {
@@ -99,7 +99,7 @@ export const getHomePageData = async (
       categories = categoriesResponse.data.data || [];
     } else {
       console.error(
-        categoriesResponse.message || "Invalid categories response data"
+        categoriesResponse.message || "Invalid categories response data",
       );
     }
   } catch (error) {
@@ -144,6 +144,7 @@ export const getHomePageData = async (
   }
 
   // Only fetch products, stores, and sections if both lat and lng are provided
+  console.log("home page service: lat", lat, "lng", lng);
   if (lat && lng) {
     // Fetch products
     try {
@@ -162,7 +163,7 @@ export const getHomePageData = async (
         products = productsResponse.data.data || [];
       } else {
         console.error(
-          productsResponse.message || "Invalid products response data"
+          productsResponse.message || "Invalid products response data",
         );
       }
     } catch (error) {
@@ -193,7 +194,7 @@ export const getHomePageData = async (
         sections = sectionsResponse.data.data || [];
       } else {
         console.error(
-          sectionsResponse.message || "Invalid sections response data"
+          sectionsResponse.message || "Invalid sections response data",
         );
       }
     } catch (error) {

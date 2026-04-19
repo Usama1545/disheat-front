@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { GetServerSideProps } from "next";
 import { getSlugFromContext, isSSR } from "@/helpers/getters";
 import MyBreadcrumbs from "@/components/custom/MyBreadcrumbs";
@@ -92,7 +93,7 @@ const ProductPage: NextPageWithLayout<ProductPageProps> = ({
       fallbackData: isSSR() ? initialProduct : undefined,
       revalidateOnFocus: false,
       revalidateOnMount: !isSSR(),
-    }
+    },
   );
 
   const {
@@ -106,7 +107,7 @@ const ProductPage: NextPageWithLayout<ProductPageProps> = ({
       fallbackData: isSSR() ? initialSimilarProducts : undefined,
       revalidateOnFocus: false,
       revalidateOnMount: !isSSR(),
-    }
+    },
   );
 
   const isProductMissing =

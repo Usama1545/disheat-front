@@ -25,7 +25,7 @@ import { useScreenType } from "@/hooks/useScreenType";
 
 const WishlistModal = dynamic(
   () => import("@/components/Modals/WishlistModal"),
-  { ssr: false }
+  { ssr: false },
 );
 
 const ProductModal = dynamic(() => import("@/components/Modals/ProductModal"), {
@@ -34,12 +34,12 @@ const ProductModal = dynamic(() => import("@/components/Modals/ProductModal"), {
 
 const HTMLRenderer = dynamic(
   () => import("@/components/Functional/HTMLRenderer"),
-  { ssr: false }
+  { ssr: false },
 );
 
 const ProductCardAddButton = dynamic(
   () => import("@/components/Cards/ProductCardAddButton"),
-  { ssr: false }
+  { ssr: false },
 );
 
 interface ProductCardProps {
@@ -69,8 +69,15 @@ const ProductCard: FC<ProductCardProps> = ({
     onClose: onWishlistClose,
   } = useDisclosure();
 
-  const defaultVariant = variants?.find((v) => v.is_default) || variants?.[0];
+  const hasVariants = variants && variants.length > 0;
 
+  const defaultVariant = hasVariants
+    ? variants.find((v) => v.is_default) || variants[0]
+    : {
+        price: product.price,
+        special_price: product.special_price,
+        stock: product.stock ?? 999, // assume available if not tracked
+      };
   const variantCombinations = (() => {
     if (!variants || variants.length <= 1) return [];
 
@@ -147,10 +154,7 @@ const ProductCard: FC<ProductCardProps> = ({
       ? null
       : lowStockLimitRaw;
 
-  const isLowStock =
-    lowStockLimit !== null &&
-    defaultVariant.stock > 0 &&
-    defaultVariant.stock <= lowStockLimit;
+  const isLowStock = lowStockLimit !== null;
 
   // Check if product is featured
   const isFeatured = product.featured === "1";
@@ -187,7 +191,6 @@ const ProductCard: FC<ProductCardProps> = ({
                       : "object-contain"
                   }`}
                   src={product.main_image}
-                  loading="lazy"
                   removeWrapper
                   radius="none"
                 />
@@ -276,24 +279,6 @@ const ProductCard: FC<ProductCardProps> = ({
               >
                 {`${product.estimated_delivery_time} ${t("mins")}`}
               </Button>
-              {product.variants.length > 1 && (
-                <Tooltip
-                  content={tooltipContent}
-                  placement="top"
-                  delay={300}
-                  closeDelay={0}
-                  classNames={{
-                    content:
-                      "bg-content1 border border-default-200 shadow-lg py-2 px-3",
-                  }}
-                >
-                  <div className="bg-warning-100 text-warning-600 py-0.5 px-1 rounded-md text-[9px] flex items-center gap-1">
-                    <span>
-                      {t("choices", { count: product.variants.length })}
-                    </span>
-                  </div>
-                </Tooltip>
-              )}
             </div>
 
             <div className="space-y-1">
@@ -305,13 +290,13 @@ const ProductCard: FC<ProductCardProps> = ({
                 >
                   {product.title ?? t("untitled_product")}
                 </Link>
-                {isLowStock && (
+                {/* {isLowStock && (
                   <span className="text-xxs text-orange-500 font-semibold whitespace-nowrap max-h-4">
                     {t("product_modal.low_stock_alert", {
                       stock: defaultVariant.stock,
                     })}
                   </span>
-                )}
+                )} */}
               </div>
 
               <HTMLRenderer
@@ -396,10 +381,6 @@ const ProductCard: FC<ProductCardProps> = ({
                 </span>
               )}
             </div>
-          ) : !defaultVariant.availability || defaultVariant.stock === 0 ? (
-            <span className="text-red-500 font-medium text-xxs sm:text-sm w-full text-end">
-              {t("out_of_stock")}
-            </span>
           ) : (
             <ProductCardAddButton
               product={product}

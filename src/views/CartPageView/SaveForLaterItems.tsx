@@ -83,10 +83,11 @@ const SaveForLaterItems: FC<{ moreProductsInline: boolean }> = ({
     setMoveLoading(true);
     try {
       const res = await handleAddToCart({
-        product_variant_id: item.product_variant_id,
-        onClose: () => {},
-        quantity: item.quantity,
+        product_id: item.product_id,
         store_id: item.store_id,
+        quantity: item.quantity,
+        onClose: () => {},
+        addons: item.addons,
         renderToast: false,
       });
 
@@ -150,7 +151,7 @@ const SaveForLaterItems: FC<{ moreProductsInline: boolean }> = ({
                 <Image
                   loading="lazy"
                   src={item.product.image}
-                  alt={item.variant.title || ""}
+                  alt={item.product.title || ""}
                   className="w-24 h-24 object-contain rounded-lg cursor-pointer"
                   onClick={() => {
                     setLightboxImages([{ src: item.product.image }]);
@@ -175,26 +176,26 @@ const SaveForLaterItems: FC<{ moreProductsInline: boolean }> = ({
                 <h3 className="text-xs font-medium line-clamp-1">
                   <Link
                     href={`/products/${item.product.slug}`}
-                    title={item.variant.title || ""}
+                    title={item.product.title || ""}
                   >
-                    {item.variant.title}
+                    {item.product.title}
                   </Link>
                 </h3>
 
                 <p className="text-xs text-foreground/60 mt-1">
-                  {item.variant.special_price &&
-                  item.variant.special_price !== 0 ? (
+                  {item.product.compare_at_price &&
+                  item.product.compare_at_price > item.product.price ? (
                     <>
                       <span className="text-foreground font-medium">
-                        {currencySymbol} {item.variant.special_price}
+                        {currencySymbol} {item.product.price}
                       </span>
                       <span className="text-foreground/40 line-through ml-2">
-                        {currencySymbol} {item.variant.price}
+                        {currencySymbol} {item.product.compare_at_price}
                       </span>
                     </>
                   ) : (
                     <span className="text-foreground font-medium">
-                      {currencySymbol} {item.variant.price}
+                      {currencySymbol} {item.product.price}
                     </span>
                   )}
                 </p>

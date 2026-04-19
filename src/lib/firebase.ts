@@ -22,7 +22,6 @@ export interface FirebaseInstance {
   auth: Auth;
   googleProvider: GoogleAuthProvider;
   appleProvider: OAuthProvider;
-  recaptchaVerifier?: RecaptchaVerifier | null;
   analytics?: Analytics | null;
 }
 
@@ -30,7 +29,7 @@ let firebaseApp: FirebaseApp | null = null;
 let cachedFirebaseInstance: FirebaseInstance | null = null;
 
 export function initializeFirebase(
-  firebaseConfig: FirebaseOptions
+  firebaseConfig: FirebaseOptions,
 ): FirebaseInstance | null {
   try {
     // Return cached instance if available
@@ -137,7 +136,7 @@ export function initializeFirebase(
 //function to properly clear reCAPTCHA
 
 export function clearRecaptchaVerifier(
-  firebaseInstance: FirebaseInstance
+  firebaseInstance: FirebaseInstance,
 ): void {
   try {
     if (firebaseInstance.recaptchaVerifier) {
@@ -176,7 +175,7 @@ export function clearRecaptchaVerifier(
 
 // Updated initializeRecaptchaVerifier function
 export function initializeRecaptchaVerifier(
-  firebaseInstance: FirebaseInstance
+  firebaseInstance: FirebaseInstance,
 ): RecaptchaVerifier | null {
   try {
     // Always clear any existing RecaptchaVerifier first
@@ -223,7 +222,7 @@ export function initializeRecaptchaVerifier(
             color: "danger",
           });
         },
-      }
+      },
     );
 
     // Cache the new verifier in the Firebase instance

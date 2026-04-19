@@ -396,8 +396,18 @@ export interface Product {
     current_slot?: string | null;
     next_opening_time?: string;
   };
+  store_id: number;
+  store_name: string;
+  store_slug: string;
   variants: ProductVariant[];
   attributes: ProductAttribute[];
+}
+
+export interface SelectedAddon {
+  id: number;
+  addon_group_id: string | number;
+  price: number;
+  name: string;
 }
 
 export interface FavoriteItem {

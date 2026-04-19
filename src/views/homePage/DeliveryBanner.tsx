@@ -11,7 +11,11 @@ const DeliveryBanner: React.FC = () => {
   return (
     <section id="delivery-banner" className="my-7">
       <div className="w-full relative overflow-visible">
-        <Card className="relative overflow-visible bg-linear-to-br from-primary to-primary-600 rtl:bg-linear-to-bl shadow-2xl border-none">
+        <Card
+          className="relative overflow-visible border-none"
+          style={{ backgroundColor: "rgba(235, 235, 235)" }}
+        >
+          {" "}
           <CardBody className="relative z-10 p-0 overflow-visible">
             {/* GRID */}
             <div className="grid grid-cols-12 min-h-[220px] relative lg:rtl:grid-flow-col-dense">
@@ -29,16 +33,16 @@ const DeliveryBanner: React.FC = () => {
               >
                 {/* Header */}
                 <div className="flex items-center gap-3 w-full">
-                  <div className="p-2 bg-white/20 rounded-full backdrop-blur-sm rtl:scale-90">
-                    <Truck className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
+                  <div className="p-2 bg-black/40 rounded-full backdrop-blur-sm rtl:scale-90">
+                    <Truck className="w-4 h-4 sm:w-6 sm:h-6 text-black" />
                   </div>
-                  <span className="text-xs sm:text-sm font-medium text-white/90">
+                  <span className="text-xs sm:text-sm font-medium text-black">
                     {t("home.delivery.header")}
                   </span>
                 </div>
 
                 {/* Title */}
-                <h1 className="text-xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight">
+                <h1 className="text-xl sm:text-4xl lg:text-5xl font-bold text-black leading-tight">
                   {t("home.delivery.title")}
                   <span className="mx-2 bg-linear-to-r from-yellow-200 to-orange-200 bg-clip-text text-transparent inline-block">
                     {t("home.delivery.highlight")}
@@ -46,7 +50,7 @@ const DeliveryBanner: React.FC = () => {
                 </h1>
 
                 {/* Subtitle */}
-                <p className="text-xs sm:text-lg text-white/90 font-medium">
+                <p className="text-xs sm:text-lg text-black/90 font-medium">
                   {t("home.delivery.subtitle")}
                 </p>
 
@@ -71,21 +75,21 @@ const DeliveryBanner: React.FC = () => {
 
                 {/* FEATURES */}
                 <div className="flex flex-wrap gap-6 pt-3">
-                  <div className="flex items-center gap-2  text-white/80">
+                  <div className="flex items-center gap-2  text-black/80">
                     <span className="w-2 h-2 bg-green-400 rounded-full" />
                     <span className="text-xxs sm:text-sm">
                       {t("home.delivery.features.tracking")}
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-2  text-white/80">
+                  <div className="flex items-center gap-2  text-black/80">
                     <span className="w-2 h-2 bg-blue-400 rounded-full" />
                     <span className="text-xxs sm:text-sm">
                       {t("home.delivery.features.packaging")}
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-2 text-white/80">
+                  <div className="flex items-center gap-2 text-black/80">
                     <span className="w-2 h-2 bg-purple-400 rounded-full" />
                     <span className="text-xxs sm:text-sm">
                       {t("home.delivery.features.contact_free")}
@@ -117,10 +121,10 @@ const DeliveryBanner: React.FC = () => {
 
                   {/* Image */}
                   <Image
-                    src="/images/delivery-boy-blue.png"
+                    src="/images/delivery-hand.png"
                     alt="Delivery person"
                     radius="lg"
-                    className="relative z-10 w-56 h-60 sm:w-72 sm:h-80 lg:w-80 lg:h-96 object-cover drop-shadow-2xl"
+                    className="relative z-10 w-50 h-60 sm:w-72 sm:h-80 lg:w-60 lg:h-96 object-cover drop-shadow-2xl"
                     classNames={{
                       img: "hover:scale-105 transition-transform duration-500 rtl:-scale-x-100 rtl:hover:-scale-x-105",
                     }}

@@ -49,7 +49,7 @@ const OrderItems: FC<OrderItemsProps> = ({
         acc[storeId].items.push(item);
         return acc;
       },
-      {} as Record<number, GroupedStore>
+      {} as Record<number, GroupedStore>,
     );
 
     return Object.values(grouped);
@@ -124,7 +124,7 @@ const OrderItems: FC<OrderItemsProps> = ({
           )}
           {buttonConfig.returnOrder &&
             order.items.some(
-              (item) => item.product?.is_returnable && item.return_eligible
+              (item) => item.product?.is_returnable && item.return_eligible,
             ) &&
             onReturnOpen && (
               <Button
@@ -192,7 +192,7 @@ const OrderItems: FC<OrderItemsProps> = ({
                           <div className="flex flex-wrap gap-2 items-center">
                             {item.variant?.title && (
                               <div className="text-xxs sm:text-xs text-foreground/50">
-                                {item.variant.title}
+                                {item.product.title}
                               </div>
                             )}
                             {item.otp && (

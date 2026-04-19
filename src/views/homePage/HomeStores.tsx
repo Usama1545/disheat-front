@@ -23,6 +23,7 @@ interface HomeStoreProps {
 // SWR fetcher
 const fetcher = async () => {
   const { lat = "", lng = "" } = getCookie("userLocation") as UserLocation;
+  console.log("home stores:", lat, lng);
   if (lat == "" && lng == "") {
     return [];
   }
@@ -60,7 +61,7 @@ const HomeStores: FC<HomeStoreProps> = ({ initialStores = [] }) => {
           </SwiperSlide>
         </>
       )),
-    [stores]
+    [stores],
   );
 
   const skeletonSlides = useMemo(() => {

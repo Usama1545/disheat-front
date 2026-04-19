@@ -6,22 +6,18 @@ import { getCookie, setCookie } from "@/lib/cookies";
 
 // Languages
 import enTranslation from "./public/locales/en.json";
-import hiTranslation from "./public/locales/hi.json";
-import arTranslation from "./public/locales/ar.json";
+import frTranslation from "./public/locales/fr.json";
 
 const LANGUAGE_KEY = "i18nextLng";
 
-const DEFAULT_LANG = "en";
+const DEFAULT_LANG = "en"; // later you can change this to "fr"
 
 const languages = {
   en: {
     translation: enTranslation,
   },
-  hi: {
-    translation: hiTranslation,
-  },
-  ar: {
-    translation: arTranslation,
+  fr: {
+    translation: frTranslation,
   },
 };
 
@@ -36,7 +32,7 @@ i18n.use(initReactI18next).init({
   },
 });
 
-// Function to change language and persist in cookie
+// Change language and persist cookie
 export const changeLanguage = (lng: string) => {
   // Persist cookie only in browser
   if (typeof window !== "undefined") {
@@ -46,11 +42,7 @@ export const changeLanguage = (lng: string) => {
 
   // Ensure this code runs only in the browser
   if (typeof document !== "undefined") {
-    if (lng === "ar") {
-      document.documentElement.setAttribute("dir", "rtl");
-    } else {
-      document.documentElement.setAttribute("dir", "ltr");
-    }
+    document.documentElement.setAttribute("dir", "ltr");
   }
 };
 

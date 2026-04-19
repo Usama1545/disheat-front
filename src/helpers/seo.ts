@@ -14,7 +14,7 @@ export const getCanonicalUrl = (path: string, baseUrl?: string): string => {
  */
 export const generateProductSchema = (
   product: Product,
-  baseUrl?: string
+  baseUrl?: string,
 ): object => {
   const url = getCanonicalUrl(`/products/${product.slug}`, baseUrl);
 
@@ -64,7 +64,7 @@ export const generateProductSchema = (
  */
 export const generateBreadcrumbSchema = (
   items: Array<{ name: string; url: string }>,
-  baseUrl?: string
+  baseUrl?: string,
 ): object => {
   return {
     "@context": "https://schema.org",
@@ -107,7 +107,7 @@ export const generateOrganizationSchema = (
   siteName: string,
   siteDescription: string,
   logo: string,
-  baseUrl?: string
+  baseUrl?: string,
 ): object => {
   return {
     "@context": "https://schema.org",
@@ -127,7 +127,7 @@ export const generateOrganizationSchema = (
  */
 export const generateWebsiteSchema = (
   siteName: string,
-  baseUrl?: string
+  baseUrl?: string,
 ): object => {
   return {
     "@context": "https://schema.org",
@@ -152,7 +152,7 @@ export const generateCollectionSchema = (
   name: string,
   description: string,
   url: string,
-  baseUrl?: string
+  baseUrl?: string,
 ): object => {
   return {
     "@context": "https://schema.org",
@@ -167,7 +167,7 @@ export const generateCollectionSchema = (
  * Generates FAQ structured data
  */
 export const generateFAQSchema = (
-  faqs: Array<{ question: string; answer: string }>
+  faqs: Array<{ question: string; answer: string }>,
 ): object => {
   return {
     "@context": "https://schema.org",
@@ -204,7 +204,7 @@ export const stripHtmlTags = (html: string): string => {
  */
 export const generateMetaDescription = (
   content: string,
-  maxLength: number = 160
+  maxLength: number = 160,
 ): string => {
   const cleanContent = stripHtmlTags(content);
   return truncateText(cleanContent, maxLength);
@@ -234,14 +234,14 @@ export const generateKeywords = (text: string, limit: number = 10): string => {
 export const generateProductMeta = (product: Product) => {
   const description = generateMetaDescription(
     product.short_description || product.description,
-    160
+    160,
   );
 
   const keywords = [
     product.title,
     product.category_name,
     product.brand_name,
-    ...product.tags,
+    ...(product.tags || []),
   ]
     .filter(Boolean)
     .join(", ");
@@ -260,7 +260,7 @@ export const generateProductMeta = (product: Product) => {
 export const generateCollectionMeta = (
   name: string,
   description: string,
-  image?: string
+  image?: string,
 ) => {
   const metaDescription = generateMetaDescription(description, 160);
   const keywords = generateKeywords(`${name} ${description}`);

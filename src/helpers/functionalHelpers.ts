@@ -11,6 +11,7 @@ import {
   CartResponse,
   Product,
   ProductVariant,
+  SelectedAddon,
   userData,
 } from "@/types/ApiResponse";
 import { addToast } from "@heroui/react";
@@ -38,7 +39,7 @@ import { trackPurchase } from "@/lib/analytics";
 export const makeTabClick = (dataKey: string): void => {
   // Select the button using the data-key attribute
   const button = document.querySelector<HTMLButtonElement>(
-    `button[data-key="${dataKey}"]`
+    `button[data-key="${dataKey}"]`,
   );
 
   // Check if the button exists
@@ -67,7 +68,7 @@ export const updateUserDataInRedux = async () => {
     } else {
       console.error(
         "Failed to update user data in Redux:",
-        res.message || "Unknown error"
+        res.message || "Unknown error",
       );
     }
   } catch (error) {
@@ -78,7 +79,7 @@ export const updateUserDataInRedux = async () => {
 
 export const handleCheckZone = async (
   latitude: string | number,
-  longitude: string | number
+  longitude: string | number,
 ): Promise<boolean> => {
   try {
     const res = await checkDeliveryZone({ latitude, longitude });
@@ -95,13 +96,13 @@ export const handleCheckZone = async (
 };
 
 export const isAxiosError = (
-  error: unknown
+  error: unknown,
 ): error is AxiosError<{ message?: string }> => {
   return axios.isAxiosError(error);
 };
 
 export const getUserLocationFromContext = async (
-  context: GetServerSidePropsContext
+  context: GetServerSidePropsContext,
 ): Promise<{ lat: string; lng: string } | null> => {
   try {
     const raw = context.req.cookies.userLocation;
@@ -122,9 +123,10 @@ export const getUserLocationFromContext = async (
 };
 
 export const handleAddToCart = async (params: {
-  product_variant_id: string | number;
+  product_id: string | number;
   store_id: string | number;
   quantity: string | number;
+  addons: SelectedAddon[] | null;
   onClose: () => void;
   renderToast: boolean;
 }) => {
@@ -254,48 +256,58 @@ export const handleAddToCart = async (params: {
 
 export const handleOfflineAddToCart = (params: {
   product: Product;
-  variant: ProductVariant;
   quantity: number;
+  addons?: SelectedAddon[];
   onClose?: () => void;
   renderToast?: boolean;
 }) => {
-  const { product, variant, quantity, onClose, renderToast = true } = params;
+  const { product, addons, quantity, onClose, renderToast = true } = params;
+
   const minQuantity = product.minimum_order_quantity || 1;
   const stepSize = product.quantity_step_size || 1;
   const maxAllowed = product.total_allowed_quantity || 1;
-  const stock = variant.stock || 0;
-  const maxQuantity = Math.min(maxAllowed, stock);
-  const finalPrice =
-    Number(variant.special_price) > 0 &&
-    Number(variant.special_price) < Number(variant.price)
-      ? Number(variant.special_price)
-      : Number(variant.price);
-  const itemId = `${variant.id}`;
+
+  // Calculate final price including addons
+  const addonsTotalPrice =
+    addons?.reduce((total, addon) => {
+      const price = parseFloat(addon.price as any) || 0;
+      return total + price;
+    }, 0) || 0;
+  console.log("addonsTotalPrice", addonsTotalPrice);
+  const finalPrice = (Number(product.price) || 0) + addonsTotalPrice;
+
+  // Create unique ID for the cart item (product_id + addons combination)
+  const addonIds =
+    addons
+      ?.map((a) => a.id)
+      .sort()
+      .join("_") || "no_addons";
+  const itemId = `${product.id}_${addonIds}`;
 
   store.dispatch(
     addOfflineCartItem({
       id: itemId,
-      name: product.title || variant.title,
+      name: product.title,
       slug: product.slug,
-      image: variant.image || product.main_image,
-      price: finalPrice,
+      image: product.main_image,
+      price: Number(finalPrice) || 0, // Base product price
       quantity: quantity || minQuantity,
-      storeName: variant.store_name,
-      storeSlug: variant.store_slug,
+      storeName: product.store_name,
+      storeSlug: product.store_slug,
       minQuantity: minQuantity,
-      maxQuantity: maxQuantity,
+      maxQuantity: maxAllowed,
       stepSize: stepSize || 1,
-      stock: stock,
-      product_variant_id: variant.id,
-      store_id: variant.store_id,
-    })
+      store_id: product.store_id,
+      addons: addons, // Store addons for reference
+      addonsTotalPrice: addonsTotalPrice, // Pre-calculated addons total
+    }),
   );
 
   if (renderToast) {
     addToast({
       title: i18n.t("cart.add_success"),
-      description: i18n.t("cart.login_required"),
-      color: "primary",
+      description: i18n.t("cart.added_to_offline_cart"),
+      color: "success",
     });
   }
 
@@ -321,7 +333,7 @@ export const resetCheckOutState = () => {
 
 export const handleCheckout = async (
   payment_type: string = "cod",
-  extra_params: object
+  extra_params: object,
 ) => {
   try {
     const state = store.getState();
@@ -351,7 +363,7 @@ export const handleCheckout = async (
     formData.append("order_note", order_note);
     formData.append(
       "redirect_url",
-      `${window.location.origin}/my-account/orders`
+      `${window.location.origin}/my-account/orders`,
     );
 
     // Add extra params
@@ -365,7 +377,7 @@ export const handleCheckout = async (
         if (attachment && attachment.file) {
           formData.append(`attachments[${productId}][]`, attachment.file);
         }
-      }
+      },
     );
 
     const response = await createOrder(formData);
@@ -380,7 +392,7 @@ export const handleCheckout = async (
           data?.currency_code || "",
           data?.promo_code || "",
           data?.delivery_charge,
-          data?.items || []
+          data?.items || [],
         );
       }
 
@@ -432,7 +444,7 @@ export const formatAmount = (value: number | string) => {
 
 export const urlToFile = async (
   url: string,
-  filename: string
+  filename: string,
 ): Promise<File> => {
   try {
     const response = await fetch(url);

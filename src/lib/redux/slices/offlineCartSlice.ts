@@ -1,3 +1,4 @@
+import { SelectedAddon } from "@/types/ApiResponse";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export type OfflineCartItem = {
@@ -12,9 +13,9 @@ export type OfflineCartItem = {
   minQuantity: number;
   maxQuantity: number;
   stepSize: number;
-  stock: number;
-  product_variant_id: number;
   store_id: number;
+  addons?: SelectedAddon[]; // Add addons
+  addonsTotalPrice?: number; // Total price of all selected addons
 };
 
 export type OfflineCartState = {
@@ -32,11 +33,14 @@ const initialState: OfflineCartState = {
 const recalculateSummary = (items: OfflineCartItem[]) => {
   const summary = items.reduce(
     (acc, item) => {
-      acc.subtotal += item.price * item.quantity;
+      // Calculate item total (product price + addons price)
+      const itemTotal =
+        (item.price + (item.addonsTotalPrice || 0)) * item.quantity;
+      acc.subtotal += itemTotal;
       acc.totalQuantity += item.quantity;
       return acc;
     },
-    { subtotal: 0, totalQuantity: 0 }
+    { subtotal: 0, totalQuantity: 0 },
   );
 
   return summary;
@@ -46,12 +50,8 @@ const clampQuantity = (item: OfflineCartItem, desiredQuantity: number) => {
   const minQuantity = item.minQuantity || 1;
   const stepSize = item.stepSize || 1;
   const maxQuantity = item.maxQuantity || Number.MAX_SAFE_INTEGER;
-  const stock = item.stock || Number.MAX_SAFE_INTEGER;
 
-  let qty = Math.max(
-    minQuantity,
-    Math.min(desiredQuantity, maxQuantity, stock)
-  );
+  let qty = Math.max(minQuantity, Math.min(desiredQuantity, maxQuantity));
 
   const remainder = (qty - minQuantity) % stepSize;
   if (remainder !== 0) {
@@ -64,11 +64,18 @@ const clampQuantity = (item: OfflineCartItem, desiredQuantity: number) => {
   return qty;
 };
 
+const calculateAddonsTotal = (addons?: SelectedAddon[]): number => {
+  if (!addons || addons.length === 0) return 0;
+  return addons.reduce((total, addon) => total + (addon.price || 0), 0);
+};
+
 const normalizeItem = (item: OfflineCartItem) => {
   const normalizedQuantity = clampQuantity(item, item.quantity);
+  const addonsTotalPrice = calculateAddonsTotal(item.addons);
   return {
     ...item,
     quantity: normalizedQuantity,
+    addonsTotalPrice,
   };
 };
 
@@ -78,15 +85,21 @@ const offlineCartSlice = createSlice({
   reducers: {
     hydrateOfflineCart: (
       state,
-      action: PayloadAction<OfflineCartItem[] | undefined>
+      action: PayloadAction<OfflineCartItem[] | undefined>,
     ) => {
-      state.items = action.payload || [];
+      state.items = (action.payload || []).map((item) => ({
+        ...item,
+        addonsTotalPrice: calculateAddonsTotal(item.addons),
+      }));
       const summary = recalculateSummary(state.items);
       state.subtotal = summary.subtotal;
       state.totalQuantity = summary.totalQuantity;
     },
     setOfflineCart: (state, action: PayloadAction<OfflineCartItem[]>) => {
-      state.items = action.payload;
+      state.items = action.payload.map((item) => ({
+        ...item,
+        addonsTotalPrice: calculateAddonsTotal(item.addons),
+      }));
       const summary = recalculateSummary(state.items);
       state.subtotal = summary.subtotal;
       state.totalQuantity = summary.totalQuantity;
@@ -94,7 +107,7 @@ const offlineCartSlice = createSlice({
     addOfflineCartItem: (state, action: PayloadAction<OfflineCartItem>) => {
       const normalizedPayload = normalizeItem(action.payload);
       const existingIndex = state.items.findIndex(
-        (item) => item.id === normalizedPayload.id
+        (item) => item.id === normalizedPayload.id,
       );
 
       if (existingIndex >= 0) {
@@ -102,10 +115,15 @@ const offlineCartSlice = createSlice({
         const mergedItem = {
           ...existingItem,
           ...normalizedPayload,
+          // Merge addons if needed (you might want to keep existing addons or replace)
+          addons: normalizedPayload.addons || existingItem.addons,
+          addonsTotalPrice: calculateAddonsTotal(
+            normalizedPayload.addons || existingItem.addons,
+          ),
         };
         mergedItem.quantity = clampQuantity(
           mergedItem,
-          existingItem.quantity + normalizedPayload.quantity
+          existingItem.quantity + normalizedPayload.quantity,
         );
         state.items[existingIndex] = mergedItem;
       } else {
@@ -118,16 +136,16 @@ const offlineCartSlice = createSlice({
     },
     updateOfflineCartItemQuantity: (
       state,
-      action: PayloadAction<{ id: string; quantity: number }>
+      action: PayloadAction<{ id: string; quantity: number }>,
     ) => {
       const targetItem = state.items.find(
-        (item) => item.id === action.payload.id
+        (item) => item.id === action.payload.id,
       );
 
       if (targetItem) {
         targetItem.quantity = clampQuantity(
           targetItem,
-          action.payload.quantity
+          action.payload.quantity,
         );
         const summary = recalculateSummary(state.items);
         state.subtotal = summary.subtotal;

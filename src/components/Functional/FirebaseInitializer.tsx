@@ -18,7 +18,6 @@ interface FirebaseInitializerProps {
 
 declare global {
   interface Window {
-    recaptchaVerifier: RecaptchaVerifier;
     firebaseInstance?: FirebaseInstance;
   }
 }
@@ -33,11 +32,6 @@ const getNotificationUrl = (data: { type?: string; order_slug?: string }) => {
 export default function FirebaseInitializer({
   settings,
 }: FirebaseInitializerProps) {
-  const firebaseConfig = getFirebaseConfig(settings);
-  console.log("Firebase config from settings:", firebaseConfig);
-
-  const notificationSettings = getSpecificSettings(settings, "notification");
-  console.log("Notification settings:", notificationSettings);
   const [firebase, setFirebase] = useState<FirebaseInstance | null>(null);
 
   // 👉 Moved this function above useEffects

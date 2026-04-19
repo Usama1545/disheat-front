@@ -6,7 +6,7 @@ import {
   FaXTwitter,
 } from "react-icons/fa6";
 import { Phone, Mail, Shield, Package, Leaf } from "lucide-react";
-import { Chip, Image } from "@heroui/react";
+import { Image } from "@heroui/react";
 import { useSettings } from "@/contexts/SettingsContext";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
@@ -239,11 +239,11 @@ const Footer: FC = () => {
               <span>
                 &copy; {new Date().getFullYear()} {siteCopyright}
               </span>
-              <Chip size="sm" radius="sm" className="h-4 text-xs px-1">
+              {/* <Chip size="sm" radius="sm" className="h-4 text-xs px-1">
                 {`V ${version}`}
-              </Chip>
+              </Chip> */}
             </div>
-            <div className="text-xs text-slate-400">
+            {/* <div className="text-xs text-slate-400">
               <span>{t("footer.bottom_bar.powered_by")} </span>
               <a
                 href="https://infinitietech.com/"
@@ -253,7 +253,7 @@ const Footer: FC = () => {
               >
                 Infinitietech
               </a>
-            </div>
+            </div> */}
           </div>
         </div>
 
@@ -469,14 +469,14 @@ const Footer: FC = () => {
               <span>
                 &copy; {new Date().getFullYear()} {siteCopyright}
               </span>
-              <Chip
+              {/* <Chip
                 size="sm"
                 radius="sm"
                 className="h-5 text-xs px-0.5"
-              >{`V ${version}`}</Chip>
+              >{`V ${version}`}</Chip> */}
             </div>
 
-            <div className="flex items-center justify-center sm:justify-end gap-2 text-sm text-slate-400">
+            {/* <div className="flex items-center justify-center sm:justify-end gap-2 text-sm text-slate-400">
               <span>{t("footer.bottom_bar.powered_by")}</span>
               <a
                 href="https://infinitietech.com/"
@@ -486,7 +486,7 @@ const Footer: FC = () => {
               >
                 Infinitietech
               </a>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

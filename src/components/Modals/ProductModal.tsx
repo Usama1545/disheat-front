@@ -10,236 +10,292 @@ import {
   Chip,
   addToast,
 } from "@heroui/react";
-import { ShoppingCart, Plus, Minus, Star, Users } from "lucide-react";
-import RatingStars from "../RatingStars";
-import { Product, ProductVariant } from "@/types/ApiResponse";
-import AttributeSelector from "../Functional/AttributeSelector";
+import { ShoppingCart, X, Minus, Plus } from "lucide-react";
+import useSWR from "swr";
 import { useSettings } from "@/contexts/SettingsContext";
+import { useTranslation } from "react-i18next";
+import { useSelector } from "react-redux";
+import { RootState } from "@/lib/redux/store";
 import {
   handleAddToCart,
   handleOfflineAddToCart,
 } from "@/helpers/functionalHelpers";
-import ProductVariantModal from "./ProductVariantModal";
-import { useTranslation } from "react-i18next";
-import Lightbox from "yet-another-react-lightbox";
-import Link from "next/link";
-import { useSelector, useDispatch } from "react-redux";
-import { RootState } from "@/lib/redux/store";
-import { addRecentlyViewed } from "@/lib/redux/slices/recentlyViewedSlice";
-import { trackProductView } from "@/lib/analytics";
+import { Product } from "@/types/ApiResponse";
 
 interface ProductModalProps {
   isOpen: boolean;
   onClose: () => void;
-  product: Product;
+  product: ProductWithAddons;
+  initialProduct?: Product;
 }
 
-const SimpleProductModal: FC<ProductModalProps> = ({
+const fetcher = async (url: string) => {
+  const res = await fetch(url);
+  const json = await res.json();
+  return json.data;
+};
+
+interface AddonOption {
+  id: string | number;
+  name: string;
+  price: string | number;
+}
+
+interface AddonGroup {
+  id: string | number;
+  name: string;
+  type: "single" | "multiple";
+  is_required: boolean;
+  min_select: number;
+  max_select: number | null;
+  options: AddonOption[];
+}
+
+interface ProductWithAddons extends Product {
+  addons?: AddonGroup[];
+}
+
+const ProductModal: FC<ProductModalProps> = ({
   isOpen,
   onClose,
   product,
+  initialProduct,
 }) => {
-  const { currencySymbol, systemSettings } = useSettings();
+  const { currencySymbol } = useSettings();
   const { t } = useTranslation();
-  const dispatch = useDispatch();
   const isLoggedIn = useSelector((state: RootState) => state.auth.isLoggedIn);
   const cartData = useSelector((state: RootState) => state.cart.cartData);
-  const [isLightboxOpen, setLightboxOpen] = useState(false);
 
-  // Number of users who have this product in their cart
-  const cartCount = Number(product.item_count_in_cart) || 0;
-
-  const [quantity, setQuantity] = useState(
-    product?.minimum_order_quantity || 1
-  );
-  const [selectedAttributes, setSelectedAttributes] = useState<
-    Record<string, string>
-  >({});
-  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
-    null
-  );
+  const [selectedAddons, setSelectedAddons] = useState<Record<string, any>>({});
+  const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
 
+  // Reset state when modal opens/closes or product changes
   useEffect(() => {
-    if (product.variants && product.variants.length > 0) {
-      const defaultVariant =
-        product.variants.find((v) => v.is_default) || product.variants[0];
-
-      if (defaultVariant) {
-        setSelectedVariant(defaultVariant);
-        setSelectedAttributes(defaultVariant.attributes || {});
-
-        // Prefill quantity from cart if exists
-        const cartItem = cartData?.items?.find(
-          (item) => item.product_variant_id === defaultVariant.id
-        );
-        setQuantity(cartItem?.quantity || product?.minimum_order_quantity || 1);
-      }
-    }
-    setLightboxOpen(false);
-
-    // Track recently viewed when modal opens
     if (isOpen && product) {
-      dispatch(addRecentlyViewed(product));
-
-      // Track product view analytics
-      trackProductView(
-        product.id.toString(),
-        product.title,
-        product.category_name,
-        selectedVariant?.price || product.variants?.[0]?.price
-      );
+      setQuantity(product.minimum_order_quantity || 1);
+      setSelectedAddons({});
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [product, isOpen, cartData, dispatch]);
+  }, [isOpen, product]);
 
+  // Prefill quantity from cart if exists
   useEffect(() => {
-    if (product.variants && Object.keys(selectedAttributes).length > 0) {
-      const matchingVariant = product.variants.find((variant) => {
-        return Object.entries(selectedAttributes).every(([key, value]) => {
-          return variant.attributes && variant.attributes[key] === value;
-        });
-      });
-
-      if (matchingVariant) {
-        setSelectedVariant(matchingVariant);
-
-        // Prefill quantity from cart for the new variant
-        const cartItem = cartData?.items?.find(
-          (item) => item.product_variant_id === matchingVariant.id
-        );
-        const newQuantity =
-          cartItem?.quantity || product?.minimum_order_quantity || 1;
-        setQuantity(() => Math.min(newQuantity, matchingVariant.stock));
+    if (product && cartData?.items && isOpen) {
+      const cartItem = cartData.items.find(
+        (item) => item.product_id === product.id,
+      );
+      if (cartItem) {
+        setQuantity(cartItem.quantity);
       }
     }
-  }, [selectedAttributes, cartData, product]);
+  }, [product, cartData, isOpen]);
 
-  if (!selectedVariant) return null;
+  const handleSelectAddon = (group: AddonGroup, option: AddonOption) => {
+    setSelectedAddons((prev) => {
+      const groupId = group.id;
 
-  const handleAttributeChange = (attributeSlug: string, value: string) => {
-    setSelectedAttributes((prev) => ({
-      ...prev,
-      [attributeSlug]: value,
-    }));
+      if (group.type === "single") {
+        return {
+          ...prev,
+          [groupId]: option,
+        };
+      }
+
+      const existing: AddonOption[] = prev[groupId] || [];
+      const exists = existing.find((o) => o.id === option.id);
+
+      if (exists) {
+        return {
+          ...prev,
+          [groupId]: existing.filter((o) => o.id !== option.id),
+        };
+      }
+
+      // respect max_select
+      if (group.max_select && existing.length >= group.max_select) {
+        addToast({
+          title: t("addon.max_selection_title"),
+          description: t("addon.max_selection_description", {
+            max: group.max_select,
+          }),
+          color: "warning",
+        });
+        return prev;
+      }
+
+      return {
+        ...prev,
+        [groupId]: [...existing, option],
+      };
+    });
   };
 
-  const lowStockLimitRaw = Number(systemSettings?.lowStockLimit);
-  const lowStockLimit =
-    Number.isNaN(lowStockLimitRaw) || lowStockLimitRaw <= 0
-      ? null
-      : lowStockLimitRaw;
+  const calculateSubtotal = () => {
+    if (!product) return 0;
 
-  const isLowStock = (stock: number) =>
-    lowStockLimit !== null && stock > 0 && stock <= lowStockLimit;
+    let total = parseFloat(product.price || "0");
 
-  const minQuantity = product.minimum_order_quantity || 1;
-  const maxQuantity = Math.min(
-    product.total_allowed_quantity || 9999,
-    selectedVariant.stock
-  );
-  const stepSize = product.quantity_step_size || 1;
+    Object.values(selectedAddons).forEach((val) => {
+      if (Array.isArray(val)) {
+        val.forEach((o: AddonOption) => (total += parseFloat(String(o.price))));
+      } else if (val) {
+        total += parseFloat(String(val.price));
+      }
+    });
 
-  const handleQuantityDecrease = () => {
-    const newQuantity = quantity - stepSize;
+    return total;
+  };
 
-    if (newQuantity < minQuantity) {
+  const calculateTotal = () => {
+    const subtotal = calculateSubtotal();
+    return subtotal * quantity;
+  };
+
+  const validateAddons = (): boolean => {
+    if (!product?.addons) return true;
+
+    for (const group of product.addons) {
+      const selected = selectedAddons[group.id];
+
+      if (group.is_required) {
+        if (group.type === "single" && !selected) {
+          addToast({
+            title: t("addon.required_title"),
+            description: t("addon.required_description", { name: group.name }),
+            color: "danger",
+          });
+          return false;
+        }
+
+        if (group.type === "multiple" && (!selected || selected.length === 0)) {
+          addToast({
+            title: t("addon.required_title"),
+            description: t("addon.required_description", { name: group.name }),
+            color: "danger",
+          });
+          return false;
+        }
+      }
+
+      if (group.type === "multiple" && selected && group.min_select > 0) {
+        if (selected.length < group.min_select) {
+          addToast({
+            title: t("addon.min_selection_title"),
+            description: t("addon.min_selection_description", {
+              name: group.name,
+              min: group.min_select,
+            }),
+            color: "danger",
+          });
+          return false;
+        }
+      }
+    }
+
+    return true;
+  };
+
+  const handleAddToCartAction = async () => {
+    if (!product) return;
+
+    if (!validateAddons()) return;
+
+    const minQuantity = product.minimum_order_quantity || 1;
+    if (quantity < minQuantity) {
       addToast({
         title: t("min_quantity_error_title"),
-        description: t("min_quantity_error_description", {
-          min: minQuantity,
-        }),
+        description: t("min_quantity_error_description", { min: minQuantity }),
         color: "danger",
       });
       return;
     }
 
-    if ((newQuantity - minQuantity) % stepSize !== 0) {
-      addToast({
-        title: t("step_error_title"),
-        description: t("step_error_description", { step: stepSize }),
-        color: "danger",
-      });
-      return;
-    }
-
-    setQuantity(Math.max(newQuantity, minQuantity));
-  };
-
-  const handleQuantityIncrease = () => {
-    const newQuantity = quantity + stepSize;
-
-    if (newQuantity > maxQuantity) {
-      addToast({
-        title: t("max_quantity_error_title"),
-        description: t("max_quantity_error_description", {
-          max: maxQuantity,
-        }),
-        color: "danger",
-      });
-      return;
-    }
-
-    if (newQuantity > selectedVariant.stock) {
-      addToast({
-        title: t("stock_limit_error_title"),
-        description: t("stock_limit_error_description", {
-          stock: selectedVariant.stock,
-        }),
-        color: "danger",
-      });
-      return;
-    }
-
-    if ((newQuantity - minQuantity) % stepSize !== 0) {
-      addToast({
-        title: t("step_error_title"),
-        description: t("step_error_description", { step: stepSize }),
-        color: "danger",
-      });
-      return;
-    }
-
-    setQuantity(Math.min(newQuantity, maxQuantity, selectedVariant.stock));
-  };
-
-  const AddToCart = async () => {
     setLoading(true);
     try {
+      // Format addons for cart
+      const addonsData = Object.entries(selectedAddons).flatMap(
+        ([groupId, value]) => {
+          if (Array.isArray(value)) {
+            return value.map((option) => ({
+              addon_group_id: groupId,
+              addon_option_id: option.id,
+              price: option.price,
+              name: option.name,
+            }));
+          } else if (value) {
+            return [
+              {
+                addon_group_id: groupId,
+                addon_option_id: value.id,
+                price: value.price,
+                name: value.name,
+              },
+            ];
+          }
+          return [];
+        },
+      );
+
       if (isLoggedIn) {
         await handleAddToCart({
-          product_variant_id: selectedVariant.id,
-          store_id: selectedVariant.store_id,
+          product_id: product.id,
+          store_id: product.store_id,
           quantity: quantity,
+          addons: addonsData,
           onClose: onClose,
           renderToast: true,
         });
       } else {
         handleOfflineAddToCart({
           product,
-          variant: selectedVariant,
           quantity,
+          addons: addonsData,
           onClose,
         });
       }
     } catch (error) {
       console.error("Add to cart failed:", error);
+      addToast({
+        title: t("error"),
+        description: t("add_to_cart_error"),
+        color: "danger",
+      });
     } finally {
       setLoading(false);
-      onClose();
     }
   };
 
-  const price = Number(selectedVariant?.price) || 0;
-  const specialPrice = Number(selectedVariant?.special_price) || 0;
+  const handleQuantityDecrease = () => {
+    const minQuantity = product?.minimum_order_quantity || 1;
+    if (quantity <= minQuantity) {
+      addToast({
+        title: t("min_quantity_error_title"),
+        description: t("min_quantity_error_description", { min: minQuantity }),
+        color: "danger",
+      });
+      return;
+    }
+    setQuantity((prev) => Math.max(prev - 1, minQuantity));
+  };
 
-  const hasDiscount = specialPrice > 0 && specialPrice < price;
-  const finalPrice = hasDiscount ? specialPrice : price;
-  const totalPrice = finalPrice * quantity;
-  const savings = hasDiscount ? (price - specialPrice) * quantity : 0;
-  const discountPercentage = hasDiscount
-    ? Math.round(((price - specialPrice) / price) * 100)
-    : 0;
+  const handleQuantityIncrease = () => {
+    const maxQuantity = product?.total_allowed_quantity || 9999;
+    if (quantity >= maxQuantity) {
+      addToast({
+        title: t("max_quantity_error_title"),
+        description: t("max_quantity_error_description", { max: maxQuantity }),
+        color: "danger",
+      });
+      return;
+    }
+    setQuantity((prev) => Math.min(prev + 1, maxQuantity));
+  };
+
+  if (!isOpen) return null;
+
+  const totalPrice = calculateTotal();
+  const subtotal = calculateSubtotal();
+
   return (
     <Modal
       isOpen={isOpen}
@@ -250,261 +306,220 @@ const SimpleProductModal: FC<ProductModalProps> = ({
         backdrop: "bg-black/60 backdrop-blur-sm",
       }}
       placement="bottom-center"
-      // scrollBehavior="inside"
     >
       <ModalContent className="max-w-md mx-auto">
-        <ModalHeader>
-          <h2>{t("product_modal.add_to_cart_title")}</h2>
+        <ModalHeader className="flex justify-between items-center">
+          <h2 className="text-xl font-semibold">
+            {product?.title || t("product_modal.add_to_cart_title")}
+          </h2>
+          <Button
+            isIconOnly
+            variant="light"
+            size="sm"
+            onPress={onClose}
+            className="absolute right-2 top-2"
+          >
+            <X size={18} />
+          </Button>
         </ModalHeader>
 
         <ModalBody className="space-y-4">
-          <div className="grid grid-cols-[35%_65%] gap-4">
-            <div className="flex items-center flex-col bg-gray-100 dark:bg-inherit rounded-lg relative">
-              {selectedVariant.image || product.main_image ? (
-                <>
-                  <Image
-                    src={selectedVariant.image || product.main_image}
-                    alt={product.title ?? t("product_modal.untitled")}
-                    classNames={{
-                      wrapper:
-                        "w-full h-32 p-0.5 flex justify-center cursor-pointer",
-                      img: "w-full h-full object-contain",
-                    }}
-                    onClick={() => setLightboxOpen(true)}
-                  />
-                  {isLightboxOpen && (
-                    <Lightbox
-                      open={isLightboxOpen}
-                      close={() => setLightboxOpen(false)}
-                      slides={[
-                        { src: selectedVariant.image || product.main_image },
-                      ]}
+          {!product ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : (
+            <>
+              {/* Product Image and Basic Info */}
+              <div className="grid grid-cols-[35%_65%] gap-4">
+                <div className="flex items-center flex-col bg-gray-100 dark:bg-default-100 rounded-lg">
+                  {product.main_image ? (
+                    <Image
+                      src={product.main_image}
+                      alt={product.title || t("product_modal.untitled")}
+                      classNames={{
+                        wrapper: "w-full h-32 p-0.5 flex justify-center",
+                        img: "w-full h-full object-contain",
+                      }}
                     />
-                  )}
-                </>
-              ) : (
-                <div className="w-full h-32 bg-gray-300 rounded-md" />
-              )}
-            </div>
-            <div className="flex items-start flex-col">
-              <div className="space-y-1 flex flex-col">
-                <div className="flex w-full items-center gap-4">
-                  {product.category_name && (
-                    <Link
-                      href={`/categories/${product.category}`}
-                      className="text-xxs text-foreground/80 uppercase tracking-wider font-medium"
-                      title={product.category_name}
-                    >
-                      {product.category_name}
-                    </Link>
-                  )}
-                  {product.featured == "1" && (
-                    <Chip
-                      className="text-xxs bg-linear-to-r from-secondary-300 to-secondary-400 capitalize text-white font-semibold shadow-sm tracking-wide mb-1"
-                      classNames={{
-                        base: "p-0.5 h-4",
-                        content: "p-1 text-xxs",
-                      }}
-                      radius="sm"
-                      startContent={<Star size={10} className="fill-current" />}
-                      title={t("featured")}
-                    >
-                      {t("featured")}
-                    </Chip>
+                  ) : (
+                    <div className="w-full h-32 bg-gray-300 rounded-md" />
                   )}
                 </div>
-                <Link
-                  href={`/products/${product?.slug ?? ""}`}
-                  title={product.title ?? t("product_modal.untitled")}
-                  className="text-lg font-bold leading-tight"
-                >
-                  {product.title ?? t("product_modal.untitled")}
-                </Link>
-
-                {/* Social Proof - Cart Count */}
-                {cartCount > 0 && (
-                  <div className="flex items-center gap-1.5 py-1">
-                    <Chip
-                      className="text-xxs bg-linear-to-r from-orange-500 to-red-500 text-white font-semibold shadow-sm"
-                      classNames={{
-                        base: "h-5 px-2",
-                        content: "px-1 text-xxs flex items-center gap-1",
-                      }}
-                      radius="sm"
-                      startContent={<Users size={11} className="shrink-0" />}
+                <div className="flex items-start flex-col">
+                  <h3 className="text-lg font-bold leading-tight">
+                    {product.title || t("product_modal.untitled")}
+                  </h3>
+                  {product.short_description && (
+                    <p
+                      className="text-xs text-foreground/50 leading-relaxed mt-1"
+                      title={product.short_description}
                     >
-                      {cartCount > 99 ? "99+" : cartCount}{" "}
-                      {t("product_modal.in_cart")}
-                    </Chip>
-                    <span className="text-xxs text-orange-600 dark:text-orange-400 font-medium animate-pulse">
-                      🔥 {t("product_modal.trending_now")}
+                      {product.short_description}
+                    </p>
+                  )}
+                  {product.brand_name && (
+                    <span className="text-primary text-xs font-semibold mt-1">
+                      {product.brand_name}
                     </span>
-                  </div>
-                )}
-              </div>
-              <div className="flex items-center justify-between py-2 gap-4">
-                {product.ratings !== undefined && (
-                  <div className="flex items-center gap-1">
-                    <RatingStars rating={Number(product.ratings)} size={14} />
-                    <span className="text-xs text-foreground/50 ml-1">
-                      ({product.ratings})
-                    </span>
-                  </div>
-                )}
-                {product.brand_name && (
-                  <Link
-                    href={`/brands/${product.brand}`}
-                    className="text-primary text-xs  font-semibold"
-                    title={product.brand_name}
-                  >
-                    {product.brand_name}
-                  </Link>
-                )}
-              </div>
-              {product.short_description && (
-                <p
-                  className="text-xs text-foreground/50 leading-relaxed"
-                  title={product.short_description}
-                >
-                  {product.short_description}
-                </p>
-              )}
-            </div>
-          </div>
-
-          {product.variants &&
-            product.variants.length > 1 &&
-            product.attributes && (
-              <div className="space-y-3">
-                <h3 className="text-sm font-semibold text-foreground/50">
-                  {t("product_modal.select_options")}
-                </h3>
-                {product.attributes.map((attribute) => (
-                  <AttributeSelector
-                    key={attribute.slug}
-                    attribute={attribute}
-                    selectedAttributes={selectedAttributes}
-                    onChange={handleAttributeChange}
-                  />
-                ))}
-              </div>
-            )}
-
-          <div className="flex items-center justify-between text-xxs sm:text-xs">
-            <div className="flex flex-col">
-              <span className="text-foreground/50">
-                {t("product_modal.stock", { stock: selectedVariant.stock })}
-              </span>
-              {(minQuantity > 1 || stepSize > 1) && (
-                <span className="text-foreground/50 text-xs">
-                  {t("product_modal.constraints", {
-                    min: minQuantity,
-                    step: stepSize,
-                  })}
-                </span>
-              )}
-              {isLowStock(selectedVariant.stock) && (
-                <span className="text-xs text-orange-500 font-medium">
-                  {t("product_modal.low_stock_alert", {
-                    stock: selectedVariant.stock,
-                  })}
-                </span>
-              )}
-            </div>
-            {selectedVariant.sku && (
-              <span className="text-foreground/50">
-                {t("product_modal.sku", { sku: selectedVariant.sku })}
-              </span>
-            )}
-          </div>
-
-          <div className="bg-linear-to-r from-primary-50 to-purple-50 dark:from-primary-900/20 dark:to-purple-900/20 p-3 rounded-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-2xl font-bold">
-                  {currencySymbol}
-                  {finalPrice.toFixed(2)}
+                  )}
                 </div>
-                {hasDiscount && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-foreground/50 line-through">
+              </div>
+
+              {/* Price Display */}
+              <div className="bg-linear-to-r from-primary-50 to-purple-50 dark:from-primary-900/20 dark:to-purple-900/20 p-3 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-2xl font-bold">
                       {currencySymbol}
-                      {price.toFixed(2)}
+                      {subtotal.toFixed(2)}
+                    </div>
+                    {product.compare_at_price &&
+                      parseFloat(product.compare_at_price) >
+                        parseFloat(product.price) && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-foreground/50 line-through">
+                            {currencySymbol}
+                            {parseFloat(product.compare_at_price).toFixed(2)}
+                          </span>
+                          <span className="text-xs text-green-600 font-medium">
+                            {t("product_modal.save", {
+                              amount: `${currencySymbol} ${(parseFloat(product.compare_at_price) - parseFloat(product.price)).toFixed(2)}`,
+                            })}
+                          </span>
+                        </div>
+                      )}
+                  </div>
+
+                  {/* Quantity Selector */}
+                  <div className="flex items-center gap-1">
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      variant="flat"
+                      isDisabled={loading}
+                      onPress={handleQuantityDecrease}
+                      className="w-8 h-8 min-w-8"
+                    >
+                      <Minus size={14} />
+                    </Button>
+                    <span className="w-8 text-center text-sm font-medium">
+                      {quantity}
                     </span>
-                    <span className="text-xs text-green-600 font-medium">
-                      {t("product_modal.save", {
-                        amount: `${currencySymbol} ${(price - specialPrice).toFixed(2)}`,
-                      })}
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      variant="flat"
+                      isDisabled={loading}
+                      onPress={handleQuantityIncrease}
+                      className="w-8 h-8 min-w-8"
+                    >
+                      <Plus size={14} />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Addons Section */}
+              {product.addons && product.addons.length > 0 && (
+                <div className="space-y-4 max-h-64 overflow-y-auto">
+                  <h3 className="text-sm font-semibold">
+                    {t("addon.customize_order")}
+                  </h3>
+                  {product.addons.map((group) => (
+                    <div key={group.id} className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <h4 className="font-medium text-sm">{group.name}</h4>
+                        {group.is_required && (
+                          <Chip
+                            size="sm"
+                            color="danger"
+                            variant="flat"
+                            className="text-xxs"
+                          >
+                            {t("addon.required")}
+                          </Chip>
+                        )}
+                      </div>
+
+                      {group.min_select > 0 && (
+                        <p className="text-xs text-foreground/50">
+                          {t("addon.select_range", {
+                            min: group.min_select,
+                            max: group.max_select || t("addon.unlimited"),
+                          })}
+                        </p>
+                      )}
+
+                      <div className="space-y-2">
+                        {group.options.map((option) => {
+                          const selected = selectedAddons[group.id];
+                          const isSelected =
+                            group.type === "single"
+                              ? selected?.id === option.id
+                              : selected?.some(
+                                  (o: AddonOption) => o.id === option.id,
+                                );
+
+                          return (
+                            <div
+                              key={option.id}
+                              className="flex justify-between items-center p-2 hover:bg-default-100 rounded-lg transition-colors"
+                            >
+                              <label className="flex items-center gap-2 flex-1 cursor-pointer">
+                                <input
+                                  type={
+                                    group.type === "single"
+                                      ? "radio"
+                                      : "checkbox"
+                                  }
+                                  name={`addon-group-${group.id}`}
+                                  checked={isSelected || false}
+                                  onChange={() =>
+                                    handleSelectAddon(group, option)
+                                  }
+                                  className="w-4 h-4"
+                                />
+                                <span className="text-sm">{option.name}</span>
+                              </label>
+                              <span className="text-sm font-medium">
+                                +{currencySymbol}
+                                {parseFloat(String(option.price)).toFixed(2)}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Total Price Summary */}
+              <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-foreground">
+                    {t("product_modal.total", { count: quantity })}
+                  </span>
+                  <span className="text-lg font-bold text-foreground">
+                    {currencySymbol}
+                    {totalPrice.toFixed(2)}
+                  </span>
+                </div>
+                {quantity > 1 && subtotal !== totalPrice / quantity && (
+                  <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                    <span className="text-xs text-foreground/50">
+                      {t("product_modal.per_item")}
+                    </span>
+                    <span className="text-xs text-foreground/50">
+                      {currencySymbol}
+                      {subtotal.toFixed(2)}
                     </span>
                   </div>
                 )}
               </div>
-
-              <div className="flex items-center gap-1">
-                <Button
-                  isIconOnly
-                  size="sm"
-                  variant="flat"
-                  isDisabled={loading || selectedVariant.stock === 0}
-                  onPress={handleQuantityDecrease}
-                  className="w-8 h-8 min-w-8"
-                >
-                  <Minus size={14} />
-                </Button>
-                <span className="w-8 text-center text-sm font-medium">
-                  {quantity}
-                </span>
-                <Button
-                  isIconOnly
-                  size="sm"
-                  variant="flat"
-                  isDisabled={loading || selectedVariant.stock === 0}
-                  onPress={handleQuantityIncrease}
-                  className="w-8 h-8 min-w-8"
-                >
-                  <Plus size={14} />
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-foreground">
-                {t("product_modal.subtotal", { count: quantity })}
-              </span>
-              <span className="text-sm font-medium text-foreground">
-                {currencySymbol}
-                {totalPrice.toFixed(2)}
-              </span>
-            </div>
-            {savings > 0 && (
-              <div className="flex justify-between items-center">
-                <div className="flex gap-1">
-                  <span className="text-sm text-green-600">
-                    {t("product_modal.total_savings")}
-                  </span>
-                  {discountPercentage > 0 && (
-                    <Chip
-                      className="text-xs font-medium"
-                      classNames={{ content: "text-xs", base: "h-5" }}
-                      color="primary"
-                      size="sm"
-                      radius="sm"
-                    >
-                      {t("product_modal.discount_percent", {
-                        percent: discountPercentage,
-                      })}
-                    </Chip>
-                  )}
-                </div>
-                <span className="text-sm font-medium text-green-600">
-                  -{currencySymbol}
-                  {savings.toFixed(2)}
-                </span>
-              </div>
-            )}
-          </div>
+            </>
+          )}
         </ModalBody>
 
         <ModalFooter>
@@ -518,49 +533,23 @@ const SimpleProductModal: FC<ProductModalProps> = ({
             >
               {t("product_modal.cancel")}
             </Button>
-            {product.store_status.is_open ? (
-              <Button
-                color="primary"
-                onPress={AddToCart}
-                isDisabled={selectedVariant.stock === 0}
-                className="flex-1 text-sm"
-                size="sm"
-                startContent={<ShoppingCart size={16} />}
-                isLoading={loading}
-              >
-                {selectedVariant.stock === 0
-                  ? t("product_modal.out_of_stock")
-                  : `${currencySymbol} ${totalPrice.toFixed(2)}`}
-              </Button>
-            ) : (
-              <div className="flex flex-col items-end flex-1">
-                <span className="text-orange-500 font-medium text-sm sm:text-medium">
-                  {t("store_closed")}
-                </span>
-                {product.store_status?.next_opening_time && (
-                  <span className="text-xxs text-foreground/60">
-                    {t("opens_at", {
-                      time: product.store_status.next_opening_time,
-                    })}
-                  </span>
-                )}
-              </div>
-            )}
+            <Button
+              color="primary"
+              onPress={handleAddToCartAction}
+              isDisabled={!product}
+              className="flex-1 text-sm"
+              size="sm"
+              startContent={<ShoppingCart size={16} />}
+              isLoading={loading}
+            >
+              {t("add_to_cart")} - {currencySymbol}
+              {totalPrice.toFixed(2)}
+            </Button>
           </div>
         </ModalFooter>
       </ModalContent>
     </Modal>
   );
-};
-
-const ProductModal: FC<ProductModalProps> = (props) => {
-  const { product } = props;
-
-  if (product.type === "variant") {
-    return <ProductVariantModal {...props} />;
-  }
-
-  return <SimpleProductModal {...props} />;
 };
 
 export default ProductModal;

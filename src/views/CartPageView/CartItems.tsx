@@ -62,7 +62,7 @@ const CartItems: FC<CartItemsProps> = ({ items = [], currencySymbol = "" }) => {
         acc[storeId].items.push(item);
         return acc;
       },
-      {} as Record<number, { store: CartItem["store"]; items: CartItem[] }>
+      {} as Record<number, { store: CartItem["store"]; items: CartItem[] }>,
     );
 
     return Object.values(grouped);
@@ -131,7 +131,7 @@ const CartItems: FC<CartItemsProps> = ({ items = [], currencySymbol = "" }) => {
   // Handle attachment change for a single product
   const handleAttachmentChange = (
     productId: number,
-    attachment: AttachmentFile | null
+    attachment: AttachmentFile | null,
   ) => {
     setAttachments((prev) => ({
       ...prev,
@@ -185,10 +185,7 @@ const CartItems: FC<CartItemsProps> = ({ items = [], currencySymbol = "" }) => {
             {/* Items in this store */}
             <div className="flex flex-col gap-3">
               {group.items.map((item, itemIndex) => {
-                const isLowStock =
-                  lowStockLimit !== null &&
-                  item.variant.stock > 0 &&
-                  item.variant.stock <= lowStockLimit;
+                const isLowStock = false;
 
                 return (
                   <div key={item.id}>
@@ -199,7 +196,6 @@ const CartItems: FC<CartItemsProps> = ({ items = [], currencySymbol = "" }) => {
                         <Image
                           loading="lazy"
                           src={item.product.image}
-                          alt={item.variant.title || ""}
                           className="w-16 h-16 sm:w-full sm:h-16 object-cover rounded-md cursor-pointer"
                           onClick={() => {
                             setLightboxImages([{ src: item.product.image }]);
@@ -218,48 +214,39 @@ const CartItems: FC<CartItemsProps> = ({ items = [], currencySymbol = "" }) => {
                           >
                             {item.product.name}
                           </Link>
+                        </h3>
 
-                          {/* VARIANT NAME & LOW STOCK INDICATOR */}
-                          {item.variant?.title && (
-                            <div className="text-xs text-foreground/50 flex flex-wrap gap-2 items-center mt-1">
-                              <span className="max-w-24 sm:max-w-32 truncate block">
-                                {item.variant.title}
-                              </span>
-                              {isLowStock && (
-                                <span className="text-orange-500 font-semibold text-xxs bg-orange-50 dark:bg-orange-900/20 px-1.5 py-0.5 rounded whitespace-nowrap">
-                                  {t("product_modal.low_stock_alert", {
-                                    stock: item.variant.stock,
-                                  })}
-                                </span>
-                              )}
-                            </div>
-                          )}
+                        <h3 className="font-medium text-sm">
+                          <span className="text-xs text-foreground/60">
+                            {item.addons?.map((addon) => addon.name).join(", ")}
+                          </span>
                         </h3>
 
                         {/* Price and Quantity - Stack on mobile */}
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 mt-1">
                           <span className="font-medium text-xs text-foreground/60 whitespace-nowrap">
                             {currencySymbol}{" "}
-                            {item.variant.special_price &&
-                            item.variant.special_price !== 0 ? (
+                            {item.product.compare_at_price &&
+                            item.product.compare_at_price >
+                              item.product.price ? (
                               <>
                                 <span className="line-through opacity-60">
-                                  {item.variant.price}
+                                  {item.product.compare_at_price}
                                 </span>{" "}
-                                {item.variant.special_price}
+                                {item.product.price}
                               </>
                             ) : (
-                              item.variant.price
+                              item.base_price
                             )}{" "}
                             × {item.quantity}
                           </span>
 
                           <CartQuantityControl
                             item={item}
-                            maxQuantity={item.product.total_allowed_quantity}
-                            minQuantity={item.product.minimum_order_quantity}
-                            quantityStep={item.product.quantity_step_size}
-                            stock={item.variant.stock}
+                            maxQuantity={200}
+                            minQuantity={1}
+                            quantityStep={1}
+                            stock={99999}
                           />
                         </div>
                       </div>

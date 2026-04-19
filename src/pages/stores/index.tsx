@@ -33,7 +33,7 @@ const StoresPage: NextPageWithLayout<StoresPageProps> = ({ initialStores }) => {
   const router = useRouter();
   const isFirstRender = useRef(true);
   const [searchQuery, setSearchQuery] = useState(
-    (router.query.search as string) || ""
+    (router.query.search as string) || "",
   );
   const debouncedSearch = useDebouncedValue(searchQuery, 500);
 
@@ -94,7 +94,7 @@ const StoresPage: NextPageWithLayout<StoresPageProps> = ({ initialStores }) => {
         title={t("pages.stores.title", "All Stores")}
         subtitle={t(
           "pages.stores.subtitle",
-          "Explore our complete collection of"
+          "Explore our complete collection of",
         )}
         highlightText={
           total ? t("pages.stores.highlight", { count: total }) : ""
@@ -160,6 +160,7 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
       try {
         const { lat = "", lng = "" } =
           (await getUserLocationFromContext(context)) || {};
+        console.log("lat", lat, "lng", lng);
         const searchQuery = (context.query?.search as string) || "";
         await loadTranslations(context);
         // Load initial batch of stores for SSR

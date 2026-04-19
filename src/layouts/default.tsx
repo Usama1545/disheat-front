@@ -18,7 +18,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import dynamic from "next/dynamic";
 const BottomNavigation = dynamic(
   () => import("@/components/Functional/BottomNavigation"),
-  { ssr: false }
+  { ssr: false },
 );
 import CookieConsent from "@/components/Functional/CookieConsent";
 import { store } from "@/lib/redux/store";
@@ -26,11 +26,11 @@ import { getCookie } from "@/lib/cookies";
 import { handleLogout } from "@/helpers/auth";
 const RemovedItemsModal = dynamic(
   () => import("@/components/Modals/RemovedItemsModal"),
-  { ssr: false }
+  { ssr: false },
 );
 const FailedItemsModal = dynamic(
   () => import("@/components/Modals/FailedItemsModal"),
-  { ssr: false }
+  { ssr: false },
 );
 
 export default function DefaultLayout({
@@ -42,7 +42,7 @@ export default function DefaultLayout({
 }) {
   const [isOnline, setIsOnline] = useState<boolean>(true);
   const [maintenanceState, setMaintenanceState] = useState(
-    maintenanceStore.getState()
+    maintenanceStore.getState(),
   );
 
   useEffect(() => {
@@ -89,7 +89,7 @@ export default function DefaultLayout({
       revalidateOnReconnect: true,
       refreshInterval: 5 * 60 * 1000,
       fallbackData: initialSettings ?? null,
-    }
+    },
   );
 
   const activeSettings: Settings | null = settings ?? null;
@@ -118,7 +118,7 @@ export default function DefaultLayout({
 
   const systemSettings: SystemSettings | undefined = getSpecificSettings(
     activeSettings,
-    "system"
+    "system",
   ) as SystemSettings | undefined;
 
   // Priority 1: Check 503-based maintenance, Priority 2: Check settings API

@@ -62,44 +62,26 @@ const HomeTopSlider: FC<HomeTopSliderProps> = ({
     revalidateOnMount: !isSSR(),
   });
 
+  console.log("bannerImages", bannerImages);
+
   if (isLoading || !bannerImages || isValidating) {
     return (
       <div className="w-full my-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
           {/* Mobile – 1 skeleton */}
           <Skeleton className="w-full aspect-409/240 rounded-lg animate-pulse block sm:hidden" />
-
-          {/* Tablet (sm) – 2 skeletons */}
-          {[...Array(2)].map((_, index) => (
-            <Skeleton
-              key={`sm-${index}`}
-              className="w-full aspect-409/240 rounded-lg animate-pulse hidden sm:block lg:hidden"
-            />
-          ))}
-
-          {/* Desktop (lg) – 3 skeletons */}
-          {[...Array(2)].map((_, index) => (
-            <Skeleton
-              key={`lg-${index}`}
-              className="w-full aspect-409/240 rounded-lg animate-pulse hidden lg:block"
-            />
-          ))}
         </div>
       </div>
     );
   }
 
   const shouldHide = bannerImages?.top?.length === 0;
+  console.log("shouldHide", shouldHide);
 
   return (
-    <section id="home-slider" className="mt-4">
-      <button
-        onClick={() => mutate()}
-        className="hidden"
-        id="home-banners-refetch"
-      />
+    <section id="home-slider" className="w-full">
       {!shouldHide && (
-        <div className="w-full mb-4">
+        <div className="w-full">
           <Swiper
             key={rtl ? "rtl-hs" : "ltr-hs"}
             dir={rtl ? "rtl" : "ltr"}
@@ -113,21 +95,22 @@ const HomeTopSlider: FC<HomeTopSliderProps> = ({
                 slidesPerView: 1,
               },
               640: {
-                slidesPerView: 2,
+                slidesPerView: 1,
               },
               1024: {
-                slidesPerView: 2,
+                slidesPerView: 1,
               },
             }}
-            className="rounded-lg shadow-none"
+            className="shadow-none border-none overflow-hidden rounded-none w-full max-w-full"
           >
             {bannerImages?.top &&
               bannerImages.top.map((banner) => (
                 <SwiperSlide key={banner.id}>
                   <Card
-                    className="border-none"
-                    radius="lg"
-                    isPressable={screen !== "mobile"}
+                    className="border-none w-full max-w-full" // Add w-full and max-w-full
+                    radius="none"
+                    fullWidth={true}
+                    isPressable={true}
                     as={Link}
                     shadow="none"
                     href={
@@ -145,9 +128,13 @@ const HomeTopSlider: FC<HomeTopSliderProps> = ({
                     <Image
                       src={banner.banner_image}
                       alt={banner.title}
+                      radius="none"
                       loading="lazy"
-                      radius="lg"
-                      className="w-full h-full aspect-409/240 object-cover"
+                      removeWrapper={false}
+                      className="!opacity-100 w-full h-full object-cover"
+                      classNames={{
+                        wrapper: "!w-full !max-w-full",
+                      }}
                     />
                   </Card>
                 </SwiperSlide>
