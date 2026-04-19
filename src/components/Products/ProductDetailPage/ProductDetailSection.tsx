@@ -37,7 +37,7 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
     Record<string, string>
   >({});
   const [quantity, setQuantity] = useState(
-    initialProduct?.minimum_order_quantity || 1
+    initialProduct?.minimum_order_quantity || 1,
   );
   const [loading, setLoading] = useState({ buyNow: false, add: false });
   const router = useRouter();
@@ -45,7 +45,7 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
   const isLoggedIn = useSelector((state: RootState) => state.auth.isLoggedIn);
 
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
-    null
+    null,
   );
 
   const cartCount = Number(initialProduct.item_count_in_cart) || 0;
@@ -127,8 +127,8 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
         // Add to offline cart
         const res = handleOfflineAddToCart({
           product: initialProduct,
-          variant: selectedVariant,
           quantity: quantity,
+          addons: [],
           renderToast: true,
         });
 
@@ -140,9 +140,10 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
 
       // Handle online cart when user is logged in
       const res = await handleAddToCart({
-        product_variant_id: selectedVariant?.id || "",
+        product_id: selectedVariant?.id || "",
         store_id: selectedVariant?.store_id || "",
         quantity: quantity,
+        addons: [],
         onClose: () => {},
         renderToast: true,
       });
