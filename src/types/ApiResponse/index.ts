@@ -283,6 +283,12 @@ export type SliderImage = {
   url: string;
   alt: string;
 };
+
+export interface ProductLocalVariant {
+  price: number;
+  special_price: number;
+  stock: number;
+}
 // Extended type definitions
 export interface ProductVariant {
   id: number;

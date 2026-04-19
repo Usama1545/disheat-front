@@ -1,7 +1,11 @@
 import { FC, useState, useEffect, useCallback, useMemo } from "react";
 import { Button, addToast } from "@heroui/react";
 import { ShoppingCart, Plus, Minus } from "lucide-react";
-import { Product, ProductVariant } from "@/types/ApiResponse";
+import {
+  Product,
+  ProductVariant,
+  ProductLocalVariant,
+} from "@/types/ApiResponse";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/lib/redux/store";
 import { useTranslation } from "react-i18next";
@@ -20,7 +24,7 @@ import { debounce } from "lodash";
 
 interface ProductCardAddButtonProps {
   product: Product;
-  defaultVariant: ProductVariant;
+  defaultVariant: ProductLocalVariant;
   onOpenModal: () => void;
 }
 

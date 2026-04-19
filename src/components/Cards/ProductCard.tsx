@@ -12,7 +12,7 @@ import {
 } from "@heroui/react";
 import { Clock, Bookmark, Star, Eye } from "lucide-react";
 import RatingStars from "../RatingStars";
-import { Product } from "@/types/ApiResponse";
+import { Product, ProductLocalVariant } from "@/types/ApiResponse";
 import dynamic from "next/dynamic";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useSelector } from "react-redux";
@@ -71,13 +71,11 @@ const ProductCard: FC<ProductCardProps> = ({
 
   const hasVariants = variants && variants.length > 0;
 
-  const defaultVariant = hasVariants
-    ? variants.find((v) => v.is_default) || variants[0]
-    : {
-        price: product.price,
-        special_price: product,
-        stock: product.stock ?? 999, // assume available if not tracked
-      };
+  const defaultVariant: ProductLocalVariant = {
+    price: product.price,
+    special_price: product.compare_at_price ?? product.price,
+    stock: product.stock ?? 999,
+  };
   const variantCombinations = (() => {
     if (!variants || variants.length <= 1) return [];
 
@@ -404,8 +402,8 @@ const ProductCard: FC<ProductCardProps> = ({
           isOpen={isWishlistOpen}
           onClose={onWishlistClose}
           productId={product.id}
-          productVariantId={defaultVariant.id}
-          storeId={defaultVariant.store_id}
+          productVariantId={product.id}
+          storeId={product.store_id}
           favorite={product.favorite}
         />
       )}
