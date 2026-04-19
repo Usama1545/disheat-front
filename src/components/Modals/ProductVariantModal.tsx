@@ -64,7 +64,7 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
       product.variants.forEach((variant) => {
         initialQuantities[variant.id] = product.minimum_order_quantity || 1;
       });
-      setVariantQuantities(initialQuantities);
+      // setVariantQuantities(initialQuantities);
     }
     setLightboxOpen(false);
 
